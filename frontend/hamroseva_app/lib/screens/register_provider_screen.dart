@@ -17,6 +17,18 @@ class _RegisterProviderScreenState extends State<RegisterProviderScreen> {
   bool _loading = false;
   bool _obscure = true;
 
+  // ✅ 6 professions (matches backend choices)
+  final List<Map<String, String>> _professions = const [
+    {"key": "CARPENTER", "label": "Carpenter"},
+    {"key": "ELECTRICIAN", "label": "Electrician"},
+    {"key": "HOUSE_CLEANING", "label": "House Cleaning"},
+    {"key": "PAINTER", "label": "Painter"},
+    {"key": "PLUMBER", "label": "Plumber"},
+    {"key": "HAIR_STYLIST", "label": "Hair Stylist"},
+  ];
+
+  String? _selectedProfession = "CARPENTER";
+
   String? _validate() {
     final u = _username.text.trim();
     final e = _email.text.trim();
@@ -27,6 +39,9 @@ class _RegisterProviderScreenState extends State<RegisterProviderScreen> {
     if (e.isEmpty || !e.contains("@")) return "Enter a valid email";
     if (p.isEmpty || p.length < 7) return "Enter a valid phone number";
     if (pw.length < 6) return "Password must be at least 6 characters";
+    if (_selectedProfession == null || _selectedProfession!.isEmpty) {
+      return "Please select a profession";
+    }
     return null;
   }
 
@@ -40,18 +55,21 @@ class _RegisterProviderScreenState extends State<RegisterProviderScreen> {
     }
 
     setState(() => _loading = true);
+
     try {
       await ApiService.registerProvider(
         username: _username.text.trim(),
         email: _email.text.trim(),
         phone: _phone.text.trim(),
         password: _password.text.trim(),
+        profession: _selectedProfession!, // ✅ send to backend
       );
 
+      // verify token works
       await ApiService.me();
 
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, "/home");
+      Navigator.pushReplacementNamed(context, "/home_decider");
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,6 +89,19 @@ class _RegisterProviderScreenState extends State<RegisterProviderScreen> {
     super.dispose();
   }
 
+  InputDecoration _decoration({
+    required String label,
+    required IconData icon,
+    Widget? suffix,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      suffixIcon: suffix,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,7 +116,7 @@ class _RegisterProviderScreenState extends State<RegisterProviderScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 10),
-                  const Icon(Icons.work, size: 64),
+                  const Icon(Icons.work_outline, size: 64),
                   const SizedBox(height: 16),
                   const Text(
                     "Become a Service Provider",
@@ -93,50 +124,64 @@ class _RegisterProviderScreenState extends State<RegisterProviderScreen> {
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
-                  Text(
+                  const Text(
                     "Create a provider account to offer services",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: Colors.black54),
                   ),
                   const SizedBox(height: 28),
 
+                  // Username
                   TextField(
                     controller: _username,
-                    decoration: InputDecoration(
-                      labelText: "Username",
-                      prefixIcon: const Icon(Icons.person),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                    textInputAction: TextInputAction.next,
+                    decoration: _decoration(label: "Username", icon: Icons.person),
                   ),
                   const SizedBox(height: 14),
+
+                  // Email
                   TextField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: "Email",
-                      prefixIcon: const Icon(Icons.email),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                    textInputAction: TextInputAction.next,
+                    decoration: _decoration(label: "Email", icon: Icons.email),
                   ),
                   const SizedBox(height: 14),
+
+                  // Phone
                   TextField(
                     controller: _phone,
                     keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: "Phone",
-                      prefixIcon: const Icon(Icons.phone),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                    textInputAction: TextInputAction.next,
+                    decoration: _decoration(label: "Phone", icon: Icons.phone),
                   ),
                   const SizedBox(height: 14),
+
+                  // Profession dropdown ✅
+                  DropdownButtonFormField<String>(
+                    value: _selectedProfession,
+                    decoration: _decoration(label: "Profession", icon: Icons.badge),
+                    items: _professions
+                        .map(
+                          (p) => DropdownMenuItem<String>(
+                            value: p["key"],
+                            child: Text(p["label"]!),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) => setState(() => _selectedProfession = val),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Password
                   TextField(
                     controller: _password,
                     obscureText: _obscure,
-                    decoration: InputDecoration(
-                      labelText: "Password",
-                      prefixIcon: const Icon(Icons.lock),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      suffixIcon: IconButton(
+                    onSubmitted: (_) => _loading ? null : _register(),
+                    decoration: _decoration(
+                      label: "Password",
+                      icon: Icons.lock,
+                      suffix: IconButton(
                         onPressed: () => setState(() => _obscure = !_obscure),
                         icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
                       ),
@@ -144,6 +189,7 @@ class _RegisterProviderScreenState extends State<RegisterProviderScreen> {
                   ),
                   const SizedBox(height: 18),
 
+                  // Register button
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
