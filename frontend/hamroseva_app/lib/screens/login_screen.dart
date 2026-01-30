@@ -17,18 +17,38 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     FocusScope.of(context).unfocus();
+
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Username and password are required")),
+      );
+      return;
+    }
+
     setState(() => _loading = true);
 
     try {
-      await ApiService.login(
-        username: _usernameController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      // 1️⃣ Login
+      await ApiService.login(username: username, password: password);
 
-      await ApiService.me(); // verify token works
+      // 2️⃣ Get user info
+      final me = await ApiService.me();
 
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, "/home");
+
+      final role = (me["role"] ?? "").toString().toUpperCase();
+
+      // 3️⃣ Navigate by role
+      if (role == "PROVIDER") {
+        Navigator.pushReplacementNamed(context, "/provider_home");
+      } else if (role == "CUSTOMER") {
+        Navigator.pushReplacementNamed(context, "/customer_home");
+      } else {
+        throw Exception("Unknown user role");
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -58,15 +78,23 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 10),
-                  const Icon(Icons.volunteer_activism, size: 64),
+                  const SizedBox(height: 20),
+
+                  // App Icon
+                  const Icon(
+                    Icons.volunteer_activism,
+                    size: 72,
+                    color: Colors.deepPurple,
+                  ),
                   const SizedBox(height: 16),
+
                   const Text(
                     "Welcome to HamroSeva",
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
+
                   Text(
                     "Login to continue",
                     textAlign: TextAlign.center,
@@ -100,31 +128,41 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       suffixIcon: IconButton(
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                        icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                        icon: Icon(
+                          _obscure ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() => _obscure = !_obscure);
+                        },
                       ),
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 22),
 
-                  // Button
+                  // Login Button
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
                       onPressed: _loading ? null : _login,
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(_loading ? "Logging in..." : "Login"),
+                      child: Text(
+                        _loading ? "Logging in..." : "Login",
+                        style: const TextStyle(fontSize: 16),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
 
+                  // Register
                   TextButton(
-                    onPressed: () => Navigator.pushNamed(context, "/role_select"),
-                    child: const Text("Create account"),
+                    onPressed: () =>
+                        Navigator.pushNamed(context, "/role_select"),
+                    child: const Text("Create new account"),
                   ),
                 ],
               ),
