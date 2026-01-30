@@ -42,13 +42,26 @@ class ProviderRegisterSerializer(serializers.ModelSerializer):
 
 
 class MeSerializer(serializers.ModelSerializer):
+    profession = serializers.SerializerMethodField()
     is_verified = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "email", "phone", "role", "is_verified"]
+        fields = ["id", "username", "email", "role", "profession", "is_verified"]
+
+    def get_profession(self, obj):
+        if obj.role == User.Role.PROVIDER:
+            try:
+                return obj.provider_profile.profession
+            except Exception:
+                return None
+        return None
 
     def get_is_verified(self, obj):
-        if obj.role == User.Role.PROVIDER and hasattr(obj, "provider_profile"):
-            return obj.provider_profile.is_verified
-        return None
+        if obj.role == User.Role.PROVIDER:
+            try:
+                return obj.provider_profile.is_verified
+            except Exception:
+                return False
+        return True
+
