@@ -1,0 +1,185 @@
+/* Hamro Sewa – modern admin theme */
+:root {
+  --hamro-primary: #0d9488;
+  --hamro-primary-dark: #0f766e;
+  --hamro-accent: #f59e0b;
+  --hamro-sidebar: #134e4a;
+  --hamro-sidebar-hover: #115e59;
+  --hamro-card: #f0fdfa;
+  --hamro-radius: 12px;
+  --hamro-shadow: 0 4px 14px rgba(13, 148, 136, 0.12);
+}
+
+/* Header */
+#header {
+  background: linear-gradient(135deg, var(--hamro-primary-dark) 0%, var(--hamro-primary) 100%) !important;
+  box-shadow: var(--hamro-shadow);
+}
+#branding h1 a {
+  color: #fff !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+#user-tools {
+  font-weight: 500;
+}
+#user-tools a {
+  color: rgba(255,255,255,0.95) !important;
+  border-radius: 8px;
+  padding: 4px 10px;
+  transition: background 0.2s;
+}
+#user-tools a:hover {
+  background: rgba(255,255,255,0.2);
+  color: #fff !important;
+}
+
+/* Sidebar */
+#content-main .module,
+#content-related .module {
+  border-radius: var(--hamro-radius);
+  box-shadow: var(--hamro-shadow);
+  overflow: hidden;
+  border: none;
+}
+#content-main .module h2,
+#content-related .module h2 {
+  background: linear-gradient(135deg, var(--hamro-sidebar) 0%, var(--hamro-sidebar-hover) 100%);
+  color: #fff !important;
+  padding: 12px 16px;
+  border-radius: var(--hamro-radius) var(--hamro-radius) 0 0;
+  font-weight: 600;
+}
+#content-main .module h3 {
+  background: var(--hamro-card);
+  color: #0f766e;
+  padding: 10px 16px;
+  font-weight: 600;
+  border-left: 4px solid var(--hamro-primary);
+}
+#content-main .module table,
+#content-related .module ul {
+  border: none;
+}
+
+/* Dashboard app list */
+#content-main .app-authentication table,
+#content-main .app-services table {
+  background: #fff;
+  border-radius: 0 0 var(--hamro-radius) var(--hamro-radius);
+}
+#content-main .app-authentication .module li a,
+#content-main .app-services .module li a {
+  padding: 10px 16px;
+  display: block;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+#content-main .app-authentication .module li a:hover,
+#content-main .app-services .module li a:hover {
+  background: var(--hamro-card);
+  color: var(--hamro-primary-dark);
+}
+
+/* Buttons */
+.addlink, a.addlink,
+input[type=submit], .button, button[type=submit] {
+  background: linear-gradient(135deg, var(--hamro-primary) 0%, var(--hamro-primary-dark) 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 10px 16px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.addlink:hover, a.addlink:hover,
+input[type=submit]:hover, .button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.4);
+}
+
+/* Changelist */
+#changelist {
+  border-radius: var(--hamro-radius);
+  box-shadow: var(--hamro-shadow);
+  overflow: hidden;
+  border: none;
+}
+#changelist .results table {
+  border-radius: 0 0 var(--hamro-radius) var(--hamro-radius);
+}
+#changelist-filter {
+  border-radius: var(--hamro-radius);
+  box-shadow: var(--hamro-shadow);
+  border: none;
+}
+#changelist-filter h2 {
+  background: var(--hamro-sidebar);
+  color: #fff;
+  padding: 12px;
+  border-radius: var(--hamro-radius) var(--hamro-radius) 0 0;
+}
+#changelist-filter h3 {
+  background: var(--hamro-card);
+  color: #0f766e;
+  padding: 8px 12px;
+  border-left: 4px solid var(--hamro-primary);
+}
+
+/* Forms */
+.submit-row {
+  padding: 16px;
+  background: var(--hamro-card);
+  border-radius: 0 0 var(--hamro-radius) var(--hamro-radius);
+  border: none;
+}
+input[type=text], input[type=email], input[type=password], input[type=number],
+select, textarea {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 8px 12px !important;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--hamro-primary) !important;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15) !important;
+}
+
+/* Messages */
+.messagelist li.success {
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 8px;
+  border-left: 4px solid var(--hamro-primary);
+}
+.messagelist li.warning {
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 8px;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+  background: var(--hamro-card);
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+.breadcrumbs a {
+  color: var(--hamro-primary-dark);
+  font-weight: 500;
+}
+
+/* Login page */
+.login {
+  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+}
+.login #header {
+  background: linear-gradient(135deg, var(--hamro-primary-dark) 0%, var(--hamro-primary) 100%) !important;
+}
+.login #container {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(13, 148, 136, 0.2);
+  padding: 2rem;
+}
