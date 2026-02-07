@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "provider_id": 1,
+    "provider_name": "provider1",
+    "provider_email": "provider1@example.com",
+    "category": "Home Services",
+    "title": "Home Cleaning Service",
+    "description": "Professional home cleaning with eco-friendly products. Deep cleaning available for all rooms.",
+    "price": "1500.00",
+    "duration_minutes": 120,
+    "location": "Kathmandu",
+    "status": "active",
+    "image_url": "https://picsum.photos/seed/cleaning/400/300.jpg"
+  },
+  {
+    "id": 2,
+    "provider_id": 1,
+    "provider_name": "provider1",
+    "provider_email": "provider1@example.com",
+    "category": "Technology",
+    "title": "Computer Repair",
+    "description": "Expert computer repair for all brands. Hardware and software issues resolved.",
+    "price": "1200.00",
+    "duration_minutes": 90,
+    "location": "Patan",
+    "status": "active",
+    "image_url": "https://picsum.photos/seed/computer/400/300.jpg"
+  },
+  {
+    "id": 3,
+    "provider_id": 2,
+    "provider_name": "provider2",
+    "provider_email": "provider2@example.com",
+    "category": "Beauty & Wellness",
+    "title": "Hair Styling & Makeup",
+    "description": "Professional hair styling and makeup services for all occasions.",
+    "price": "2000.00",
+    "duration_minutes": 150,
+    "location": "Lalitpur",
+    "status": "active",
+    "image_url": "https://picsum.photos/seed/beauty/400/300.jpg"
+  },
+  {
+    "id": 4,
+    "provider_id": 2,
+    "provider_name": "provider2",
+    "provider_email": "provider2@example.com",
+    "category": "Beauty & Wellness",
+    "title": "Massage Therapy",
+    "description": "Relaxing full-body massage with essential oils and professional techniques.",
+    "price": "2500.00",
+    "duration_minutes": 60,
+    "location": "Kathmandu",
+    "status": "active",
+    "image_url": "https://picsum.photos/seed/massage/400/300.jpg"
+  },
+  {
+    "id": 5,
+    "provider_id": 3,
+    "provider_name": "provider3",
+    "provider_email": "provider3@example.com",
+    "category": "Education",
+    "title": "Mathematics Tutoring",
+    "description": "Expert math tutoring for school and college students. All levels covered.",
+    "price": "1000.00",
+    "duration_minutes": 60,
+    "location": "Online",
+    "status": "active",
+    "image_url": "https://picsum.photos/seed/tutoring/400/300.jpg"
+  }
+]
