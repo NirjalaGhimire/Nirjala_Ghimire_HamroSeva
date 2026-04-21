@@ -58,3 +58,12 @@ INSERT INTO seva_servicecategory (name, description, icon) VALUES
 ('Fitness', 'Personal training and fitness coaching', '💪'),
 ('Photography', 'Professional photography services', '📸'),
 ('Catering', 'Food and catering services', '🍽️');
+
+-- Chat messages (for conversation between customers and providers)
+CREATE TABLE IF NOT EXISTS seva_chat_message (
+    id SERIAL PRIMARY KEY,
+    booking_id INTEGER REFERENCES seva_booking(id),
+    sender_id INTEGER REFERENCES seva_auth_user(id),
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
