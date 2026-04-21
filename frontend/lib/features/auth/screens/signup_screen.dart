@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/features/auth/screens/register_customer_screen.dart';
 import 'package:hamro_sewa_frontend/features/auth/screens/register_provider_screen.dart';
@@ -12,8 +13,8 @@ class SignupScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.lightLavender,
       appBar: AppBar(
-        title: const Text(
-          'Sign Up',
+        title: Text(
+          AppStrings.t(context, 'signUp'),
           style: TextStyle(
             color: AppTheme.white,
             fontWeight: FontWeight.bold,
@@ -34,8 +35,8 @@ class SignupScreen extends StatelessWidget {
                 color: AppTheme.darkGrey,
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Join Hamro Sewa',
+              Text(
+                AppStrings.t(context, 'joinHamroSewa'),
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -44,7 +45,7 @@ class SignupScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Select how you want to use our platform',
+                AppStrings.t(context, 'selectHowToUsePlatform'),
                 style: TextStyle(
                   fontSize: 15,
                   color: AppTheme.darkGrey.withOpacity(0.8),
@@ -63,7 +64,7 @@ class SignupScreen extends StatelessWidget {
                     );
                   },
                   icon: const Icon(Icons.person),
-                  label: const Text('Register as Customer'),
+                  label: Text(AppStrings.t(context, 'registerAsCustomer')),
                 ),
               ),
               const SizedBox(height: 16),
@@ -78,7 +79,8 @@ class SignupScreen extends StatelessWidget {
                     );
                   },
                   icon: const Icon(Icons.work),
-                  label: const Text('Register as Service Provider'),
+                  label:
+                      Text(AppStrings.t(context, 'registerAsServiceProvider')),
                 ),
               ),
             ],

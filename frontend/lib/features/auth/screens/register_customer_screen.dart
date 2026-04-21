@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
-import 'package:hamro_sewa_frontend/services/token_storage.dart';
-import 'package:hamro_sewa_frontend/features/auth/screens/login_prototype_screen.dart';
+import 'package:hamro_sewa_frontend/services/referral_link_service.dart';
+import 'package:hamro_sewa_frontend/features/auth/screens/registration_email_verification_screen.dart';
 
 class RegisterCustomerScreen extends StatefulWidget {
-  const RegisterCustomerScreen({super.key});
+  const RegisterCustomerScreen({super.key, this.initialReferralCode});
+
+  final String? initialReferralCode;
 
   @override
   State<RegisterCustomerScreen> createState() => _RegisterCustomerScreenState();
@@ -19,6 +23,8 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
   final _username = TextEditingController();
   final _email = TextEditingController();
   final _phone = TextEditingController();
+  final _district = TextEditingController();
+  final _city = TextEditingController();
   final _referralCode = TextEditingController();
   final _password = TextEditingController();
   final _passwordConfirm = TextEditingController();
@@ -32,6 +38,12 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
   @override
   void initState() {
     super.initState();
+    final prefill = widget.initialReferralCode?.trim().isNotEmpty == true
+        ? widget.initialReferralCode!.trim()
+        : ReferralLinkService.pendingReferralCode;
+    if (prefill != null && prefill.isNotEmpty) {
+      _referralCode.text = prefill.toUpperCase();
+    }
     _loadProviders();
   }
 
@@ -40,16 +52,16 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
       final list = await ApiService.getProviders();
       if (mounted) {
         setState(() {
-        _providers = list;
-        _providersLoading = false;
-      });
+          _providers = list;
+          _providersLoading = false;
+        });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-        _providers = [];
-        _providersLoading = false;
-      });
+          _providers = [];
+          _providersLoading = false;
+        });
       }
     }
   }
@@ -59,6 +71,8 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
     _username.dispose();
     _email.dispose();
     _phone.dispose();
+    _district.dispose();
+    _city.dispose();
     _referralCode.dispose();
     _password.dispose();
     _passwordConfirm.dispose();
@@ -68,17 +82,21 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
   Future<void> _register() async {
     if (_username.text.trim().isEmpty ||
         _email.text.trim().isEmpty ||
+        _district.text.trim().isEmpty ||
+        _city.text.trim().isEmpty ||
         _password.text.trim().isEmpty ||
         _passwordConfirm.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields')),
+        SnackBar(
+            content: Text(
+                AppStrings.t(context, 'fillAllRequiredFieldsDistrictCity'))),
       );
       return;
     }
 
     if (_password.text != _passwordConfirm.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
+        SnackBar(content: Text(AppStrings.t(context, 'passwordsDoNotMatch'))),
       );
       return;
     }
@@ -92,35 +110,43 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
         username: _username.text.trim(),
         email: _email.text.trim(),
         phone: _phone.text.trim(),
+        district: _district.text.trim(),
+        city: _city.text.trim(),
         password: _password.text,
         passwordConfirm: _passwordConfirm.text,
-        referralCode: _referralCode.text.trim().isEmpty ? null : _referralCode.text.trim(),
+        referralCode: _referralCode.text.trim().isEmpty
+            ? null
+            : _referralCode.text.trim(),
       );
-
-      // Save tokens and user
-      await TokenStorage.saveTokens(
-        accessToken: response['tokens']['access'],
-        refreshToken: response['tokens']['refresh'],
-      );
-      if (response['user'] != null) {
-        await TokenStorage.saveUser(Map<String, dynamic>.from(response['user'] as Map));
-      }
 
       if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoginPrototypeScreen()),
-          (route) => false,
+        final cooldown = int.tryParse(
+                (response['resend_cooldown_seconds'] ?? '').toString()) ??
+            60;
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => RegistrationEmailVerificationScreen(
+              email: _email.text.trim(),
+              role: 'customer',
+              initialCooldownSeconds: cooldown,
+            ),
+          ),
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration successful!')),
+          SnackBar(
+            content: const Text(
+                'Verification code sent. Check your email to complete registration.'),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         final String msg = e is TimeoutException
-            ? 'Connection timed out. Is the backend running? Run: python manage.py runserver 0.0.0.0:8000'
-            : _cleanExceptionMessage(e, prefix: 'Registration failed: ');
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+            ? AppStrings.t(context, 'connectionTimedOutRunBackend')
+            : _cleanExceptionMessage(e,
+                prefix: '${AppStrings.t(context, 'registrationFailed')}: ');
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     } finally {
       if (mounted) {
@@ -142,7 +168,7 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
     return Scaffold(
       backgroundColor: _CustomerSignupBackground,
       appBar: AppBar(
-        title: const Text('Customer Registration'),
+        title: Text(AppStrings.t(context, 'customerRegistration')),
         backgroundColor: _CustomerSignupPrimary,
         foregroundColor: Colors.white,
       ),
@@ -157,8 +183,8 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
                 color: _CustomerSignupPrimary,
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Create Customer Account',
+              Text(
+                AppStrings.t(context, 'createCustomerAccount'),
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -167,54 +193,89 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
               const SizedBox(height: 30),
               TextField(
                 controller: _username,
-                decoration: const InputDecoration(
-                  labelText: "Username *",
+                decoration: InputDecoration(
+                  labelText: '${AppStrings.t(context, 'username')} *',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: const Icon(Icons.person),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _email,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: "Email *",
+                decoration: InputDecoration(
+                  labelText: '${AppStrings.t(context, 'email')} *',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+                  prefixIcon: const Icon(Icons.email),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _phone,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: "Phone Number",
+                decoration: InputDecoration(
+                  labelText: AppStrings.t(context, 'phoneNumber'),
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.phone),
+                  prefixIcon: const Icon(Icons.phone),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _district,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: '${AppStrings.t(context, 'district')} *',
+                  hintText: AppStrings.t(context, 'districtHintKathmandu'),
+                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.map_outlined),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _city,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: '${AppStrings.t(context, 'city')} *',
+                  hintText: AppStrings.t(context, 'cityHintThamel'),
+                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.location_city_outlined),
                 ),
               ),
               const SizedBox(height: 16),
               _providersLoading
-                  ? const ListTile(title: Text('Loading providers...'))
+                  ? ListTile(
+                      title: Text(AppStrings.t(context, 'loadingProviders')))
                   : DropdownButtonFormField<int>(
+                      isExpanded: true,
                       initialValue: _selectedProviderId,
-                      decoration: const InputDecoration(
-                        labelText: "Preferred provider (optional)",
+                      decoration: InputDecoration(
+                        labelText:
+                            AppStrings.t(context, 'preferredProviderOptional'),
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person_search),
+                        prefixIcon: const Icon(Icons.person_search),
                       ),
                       items: [
-                        const DropdownMenuItem(value: null, child: Text('None')),
+                        DropdownMenuItem(
+                            value: null,
+                            child: Text(AppStrings.t(context, 'none'))),
                         ..._providers.where((p) {
                           final id = p['id'];
-                          return id != null && (id is int || int.tryParse(id.toString()) != null);
+                          return id != null &&
+                              (id is int ||
+                                  int.tryParse(id.toString()) != null);
                         }).map<DropdownMenuItem<int>>((p) {
-                          final id = p['id'] is int ? p['id'] as int : int.tryParse(p['id'].toString())!;
+                          final id = p['id'] is int
+                              ? p['id'] as int
+                              : int.tryParse(p['id'].toString())!;
                           final name = (p['username'] ?? '').toString();
-                          final prof = (p['profession'] ?? '').toString().trim();
+                          final prof =
+                              (p['profession'] ?? '').toString().trim();
                           return DropdownMenuItem<int>(
                             value: id,
-                            child: Text(prof.isEmpty ? name : '$name ($prof)'),
+                            child: Text(
+                              prof.isEmpty ? name : '$name ($prof)',
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           );
                         }),
                       ],
@@ -224,16 +285,16 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
               TextField(
                 controller: _referralCode,
                 textCapitalization: TextCapitalization.characters,
-                decoration: const InputDecoration(
-                  labelText: "Referral code (optional)",
-                  hintText: "e.g. HAMRO-NISHA-2026",
+                decoration: InputDecoration(
+                  labelText: AppStrings.t(context, 'referralCodeOptional'),
+                  hintText: AppStrings.t(context, 'referralCodeHint'),
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.card_giftcard),
+                  prefixIcon: const Icon(Icons.card_giftcard),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Have a code from a friend? Enter it here – you\'ll both earn loyalty points when you book a service.',
+                AppStrings.t(context, 'referralCodeHelpText'),
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
               const SizedBox(height: 16),
@@ -241,7 +302,7 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
                 controller: _password,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  labelText: "Password *",
+                  labelText: '${AppStrings.t(context, 'password')} *',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
@@ -263,7 +324,7 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
                 controller: _passwordConfirm,
                 obscureText: _obscureConfirmPassword,
                 decoration: InputDecoration(
-                  labelText: "Confirm Password *",
+                  labelText: '${AppStrings.t(context, 'confirmPassword')} *',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
@@ -291,9 +352,9 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Register',
+                      ? const AppShimmerLoader(color: Colors.white)
+                      : Text(
+                          AppStrings.t(context, 'register'),
                           style: TextStyle(fontSize: 16),
                         ),
                 ),
@@ -303,9 +364,11 @@ class _RegisterCustomerScreenState extends State<RegisterCustomerScreen> {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: const Text(
-                  'Already have an account? Login',
-                  style: TextStyle(color: _CustomerSignupPrimary, fontWeight: FontWeight.w600),
+                child: Text(
+                  AppStrings.t(context, 'alreadyHaveAccountLogin'),
+                  style: TextStyle(
+                      color: _CustomerSignupPrimary,
+                      fontWeight: FontWeight.w600),
                 ),
               ),
             ],
