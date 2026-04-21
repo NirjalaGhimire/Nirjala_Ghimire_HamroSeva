@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/features/orders/screens/payments_screen.dart';
 
@@ -11,7 +12,8 @@ class OrderDetailScreen extends StatelessWidget {
     this.status = 'pending',
     this.address = 'N-35 Itahari Dulari, Sundar Haraicha',
     this.orderDate = '20 March 12:00 PM',
-    this.detailsText = 'There are no limits in the world of HamroSeva. You can be both a customer and a helper. For more you can press show more.',
+    this.detailsText =
+        'There are no limits in the world of HamroSeva. You can be both a customer and a helper. For more you can press show more.',
     this.showWorkers = false,
     this.showBookedServices = true,
     this.showPayments = false,
@@ -50,19 +52,19 @@ class OrderDetailScreen extends StatelessWidget {
   String _statusMessage(String s) {
     switch (s.toLowerCase()) {
       case 'pending':
-        return 'We have received your order and will get back to you as soon as the order is reviewed.';
+        return 'statusMessagePending';
       case 'accepted':
-        return 'We have reviewed your order. Our team will contact you soon for quotation.';
+        return 'statusMessageAccepted';
       case 'confirmed':
-        return 'You have confirmed your order. We are going to assign workers for your order.';
+        return 'statusMessageConfirmed';
       case 'assigned':
-        return 'Workers have been assigned to your order. They will soon start working on your order.';
+        return 'statusMessageAssigned';
       case 'in progress':
-        return 'Your order is in progress. Our workers will make sure to do quality work for you.';
+        return 'statusMessageInProgress';
       case 'cancelled':
-        return 'We have cancelled this order because customer was not responding.';
+        return 'statusMessageCancelled';
       case 'completed':
-        return 'Your order has successfully been completed. We hope that you have liked our services 👋🎉.';
+        return 'statusMessageCompleted';
       default:
         return 'Order status: $s';
     }
@@ -73,7 +75,9 @@ class OrderDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.lightLavender,
       appBar: AppBar(
-        title: const Text('Order Detail', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        title: Text(AppStrings.t(context, 'orderDetail'),
+            style: const TextStyle(
+                color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.darkGrey,
         foregroundColor: AppTheme.white,
         actions: [
@@ -85,7 +89,8 @@ class OrderDetailScreen extends StatelessWidget {
                 children: [
                   const Icon(Icons.check_circle, color: Colors.green, size: 20),
                   const SizedBox(width: 4),
-                  Text('Completed', style: TextStyle(color: Colors.green[200], fontSize: 12)),
+                  Text(AppStrings.t(context, 'completed'),
+                      style: TextStyle(color: Colors.green[200], fontSize: 12)),
                 ],
               ),
             ),
@@ -101,18 +106,29 @@ class OrderDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Order Status', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
+                  Text(AppStrings.t(context, 'orderStatus'),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.darkGrey)),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: _statusColor(status).withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(status, style: TextStyle(fontWeight: FontWeight.w600, color: _statusColor(status))),
+                    child: Text(status,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: _statusColor(status))),
                   ),
                   const SizedBox(height: 8),
-                  Text(_statusMessage(status), style: TextStyle(fontSize: 13, color: AppTheme.darkGrey.withOpacity(0.8))),
+                  Text(AppStrings.t(context, _statusMessage(status)),
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.darkGrey.withOpacity(0.8))),
                 ],
               ),
             ),
@@ -121,9 +137,14 @@ class OrderDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Address:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
+                  Text('${AppStrings.t(context, 'address')}:',
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.darkGrey)),
                   const SizedBox(height: 4),
-                  Text(address, style: const TextStyle(color: AppTheme.darkGrey)),
+                  Text(address,
+                      style: const TextStyle(color: AppTheme.darkGrey)),
                 ],
               ),
             ),
@@ -132,7 +153,11 @@ class OrderDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Service Type', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
+                  Text(AppStrings.t(context, 'serviceType'),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.darkGrey)),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -151,9 +176,14 @@ class OrderDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Order Date', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
+                  Text(AppStrings.t(context, 'orderDate'),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.darkGrey)),
                   const SizedBox(height: 4),
-                  Text(orderDate, style: const TextStyle(color: AppTheme.darkGrey)),
+                  Text(orderDate,
+                      style: const TextStyle(color: AppTheme.darkGrey)),
                 ],
               ),
             ),
@@ -162,10 +192,23 @@ class OrderDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Details', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
+                  Text(AppStrings.t(context, 'details'),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.darkGrey)),
                   const SizedBox(height: 4),
-                  Text(detailsText, style: TextStyle(fontSize: 13, color: AppTheme.darkGrey.withOpacity(0.8)), maxLines: 3, overflow: TextOverflow.ellipsis),
-                  GestureDetector(onTap: () {}, child: const Text('Show more', style: TextStyle(color: Colors.blue, fontSize: 13))),
+                  Text(detailsText,
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.darkGrey.withOpacity(0.8)),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis),
+                  GestureDetector(
+                      onTap: () {},
+                      child: Text(AppStrings.t(context, 'showMore'),
+                          style: const TextStyle(
+                              color: Colors.blue, fontSize: 13))),
                 ],
               ),
             ),
@@ -174,7 +217,11 @@ class OrderDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Attachments', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
+                  Text(AppStrings.t(context, 'attachments'),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.darkGrey)),
                   const SizedBox(height: 8),
                   SizedBox(
                     height: 72,
@@ -185,8 +232,11 @@ class OrderDetailScreen extends StatelessWidget {
                       itemBuilder: (_, i) => Container(
                         width: 72,
                         height: 72,
-                        decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(8)),
-                        child: Icon(Icons.image_outlined, color: Colors.grey[600]),
+                        decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(8)),
+                        child:
+                            Icon(Icons.image_outlined, color: Colors.grey[600]),
                       ),
                     ),
                   ),
@@ -197,11 +247,15 @@ class OrderDetailScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _card(
                 onTap: () => _showWorkersModal(context),
-                child: const Row(
+                child: Row(
                   children: [
-                    Text('Workers/Helpers', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
-                    Spacer(),
-                    Icon(Icons.chevron_right, color: AppTheme.darkGrey),
+                    Text(AppStrings.t(context, 'workersHelpers'),
+                        style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.darkGrey)),
+                    const Spacer(),
+                    const Icon(Icons.chevron_right, color: AppTheme.darkGrey),
                   ],
                 ),
               ),
@@ -212,20 +266,30 @@ class OrderDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Booked Services', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
+                    Text(AppStrings.t(context, 'bookedServices'),
+                        style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.darkGrey)),
                     const SizedBox(height: 8),
                     _bookedRow('Maid Services', 'Rs. 455'),
                     _bookedRow('Carpet Cleaning', 'Rs. 455'),
                     _bookedRow('Sofa Cleaning', 'Rs. 455'),
                     const SizedBox(height: 12),
-                    _bookedRow('Tax', 'Rs. 455'),
+                    _bookedRow(AppStrings.t(context, 'tax'), 'Rs. 455'),
                     _bookedRow('Discount (10%)', '-10.00'),
                     const Divider(height: 16),
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Total:', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
-                        Text('Rs. 1250', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
+                        Text('${AppStrings.t(context, 'totalAmount')}:',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.darkGrey)),
+                        const Text('Rs. 1250',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.darkGrey)),
                       ],
                     ),
                   ],
@@ -235,12 +299,17 @@ class OrderDetailScreen extends StatelessWidget {
             if (showPayments) ...[
               const SizedBox(height: 12),
               _card(
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PaymentsScreen())),
-                child: const Row(
+                onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PaymentsScreen())),
+                child: Row(
                   children: [
-                    Text('Payments', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
-                    Spacer(),
-                    Icon(Icons.chevron_right, color: AppTheme.darkGrey),
+                    Text(AppStrings.t(context, 'payments'),
+                        style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.darkGrey)),
+                    const Spacer(),
+                    const Icon(Icons.chevron_right, color: AppTheme.darkGrey),
                   ],
                 ),
               ),
@@ -251,7 +320,7 @@ class OrderDetailScreen extends StatelessWidget {
                 child: TextButton.icon(
                   onPressed: () => _showHelpDialog(context),
                   icon: const Icon(Icons.help_outline),
-                  label: const Text('Do you need any Help?'),
+                  label: Text(AppStrings.t(context, 'doYouNeedHelp')),
                 ),
               ),
             ],
@@ -267,20 +336,28 @@ class OrderDetailScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6)
+        ],
       ),
       child: child,
     );
-    if (onTap != null) return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(12), child: c);
+    if (onTap != null)
+      return InkWell(
+          onTap: onTap, borderRadius: BorderRadius.circular(12), child: c);
     return c;
   }
 
   Widget _serviceChip(IconData icon, String label) {
     return Column(
       children: [
-        CircleAvatar(radius: 24, backgroundColor: Colors.grey[200], child: Icon(icon, size: 22, color: AppTheme.darkGrey)),
+        CircleAvatar(
+            radius: 24,
+            backgroundColor: Colors.grey[200],
+            child: Icon(icon, size: 22, color: AppTheme.darkGrey)),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.darkGrey)),
+        Text(label,
+            style: const TextStyle(fontSize: 11, color: AppTheme.darkGrey)),
       ],
     );
   }
@@ -288,7 +365,10 @@ class OrderDetailScreen extends StatelessWidget {
   Widget _bookedRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(label, style: const TextStyle(color: AppTheme.darkGrey)), Text(value, style: const TextStyle(color: AppTheme.darkGrey))]),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text(label, style: const TextStyle(color: AppTheme.darkGrey)),
+        Text(value, style: const TextStyle(color: AppTheme.darkGrey))
+      ]),
     );
   }
 
@@ -300,21 +380,35 @@ class OrderDetailScreen extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircleAvatar(radius: 32, backgroundColor: AppTheme.darkGrey, child: Icon(Icons.phone_in_talk, color: AppTheme.white, size: 32)),
+            const CircleAvatar(
+                radius: 32,
+                backgroundColor: AppTheme.darkGrey,
+                child:
+                    Icon(Icons.phone_in_talk, color: AppTheme.white, size: 32)),
             const SizedBox(height: 16),
-            const Text('Do you need any Help?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
+            Text(AppStrings.t(context, 'doYouNeedHelp'),
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.darkGrey)),
             const SizedBox(height: 8),
-            const Text('After confirmation, we are going to assign workers for your order.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.darkGrey)),
+            Text(AppStrings.t(context, 'afterConfirmationAssignWorkers'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppTheme.darkGrey)),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Contact — coming soon')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content:
+                          Text(AppStrings.t(context, 'contactComingSoon'))));
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.darkGrey, foregroundColor: AppTheme.white),
-                child: const Text('Contact'),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.darkGrey,
+                    foregroundColor: AppTheme.white),
+                child: Text(AppStrings.t(context, 'contactUs')),
               ),
             ),
           ],
@@ -326,13 +420,18 @@ class OrderDetailScreen extends StatelessWidget {
   void _showWorkersModal(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Workers / Helpers', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
+            Text(AppStrings.t(context, 'workersHelpers'),
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.darkGrey)),
             const SizedBox(height: 16),
             _workerTile('Shahid Iqbal', 'Plumber'),
             _workerTile('Ehsan Ullah', 'Helper'),
@@ -346,9 +445,14 @@ class OrderDetailScreen extends StatelessWidget {
 
   Widget _workerTile(String name, String role) {
     return ListTile(
-      leading: const CircleAvatar(backgroundColor: AppTheme.lightLavender, child: Icon(Icons.person, color: AppTheme.darkGrey)),
-      title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
-      trailing: Text(role, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+      leading: const CircleAvatar(
+          backgroundColor: AppTheme.lightLavender,
+          child: Icon(Icons.person, color: AppTheme.darkGrey)),
+      title: Text(name,
+          style: const TextStyle(
+              fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
+      trailing:
+          Text(role, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
     );
   }
 }

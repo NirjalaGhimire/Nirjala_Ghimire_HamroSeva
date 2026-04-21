@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
 
@@ -8,24 +10,74 @@ class WriteReviewForBookingScreen extends StatefulWidget {
     super.key,
     required this.bookingId,
     this.serviceTitle = 'Service',
+    this.providerName,
+    this.initialReview,
   });
 
   final int bookingId;
   final String serviceTitle;
+  final String? providerName;
+  final Map<String, dynamic>? initialReview;
 
   @override
-  State<WriteReviewForBookingScreen> createState() => _WriteReviewForBookingScreenState();
+  State<WriteReviewForBookingScreen> createState() =>
+      _WriteReviewForBookingScreenState();
 }
 
-class _WriteReviewForBookingScreenState extends State<WriteReviewForBookingScreen> {
+class _WriteReviewForBookingScreenState
+    extends State<WriteReviewForBookingScreen> {
   int _rating = 0;
   final _commentController = TextEditingController();
+  bool _loadingExisting = false;
+  bool _hasExistingReview = false;
   bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingReview();
+  }
 
   @override
   void dispose() {
     _commentController.dispose();
     super.dispose();
+  }
+
+  void _applyExistingReview(Map<String, dynamic> review) {
+    final existingRating = review['rating'] is int
+        ? review['rating'] as int
+        : int.tryParse(review['rating']?.toString() ?? '') ?? 0;
+    final existingComment = (review['comment'] ?? '').toString();
+    if (!mounted) return;
+    setState(() {
+      _hasExistingReview = (review['exists'] == true) || (review['id'] != null);
+      if (existingRating >= 1 && existingRating <= 5) {
+        _rating = existingRating;
+      }
+      _commentController.text = existingComment;
+    });
+  }
+
+  Future<void> _loadExistingReview() async {
+    final seeded = widget.initialReview;
+    if (seeded != null && seeded.isNotEmpty) {
+      _applyExistingReview(seeded);
+      return;
+    }
+
+    setState(() => _loadingExisting = true);
+    try {
+      final review = await ApiService.getReviewForBooking(widget.bookingId);
+      if (!mounted) return;
+      if (review['exists'] == true) {
+        _applyExistingReview(review);
+      }
+    } catch (_) {
+      // Keep screen usable for first-time review writes.
+    } finally {
+      if (mounted) setState(() => _loadingExisting = false);
+    }
   }
 
   Future<void> _submit() async {
@@ -39,7 +91,10 @@ class _WriteReviewForBookingScreenState extends State<WriteReviewForBookingScree
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Thank you! Your review has been posted.')),
+        SnackBar(
+            content: Text(_hasExistingReview
+                ? AppStrings.t(context, 'reviewUpdatedSuccessfully')
+                : AppStrings.t(context, 'reviewPostedThankYou'))),
       );
       Navigator.of(context).pop(true);
     } catch (e) {
@@ -58,7 +113,12 @@ class _WriteReviewForBookingScreenState extends State<WriteReviewForBookingScree
     return Scaffold(
       backgroundColor: AppTheme.white,
       appBar: AppBar(
-        title: const Text('Write a review', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        title: Text(
+            _hasExistingReview
+                ? AppStrings.t(context, 'editReview')
+                : AppStrings.t(context, 'writeReview'),
+            style: const TextStyle(
+                color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.customerPrimary,
         foregroundColor: AppTheme.white,
       ),
@@ -67,17 +127,41 @@ class _WriteReviewForBookingScreenState extends State<WriteReviewForBookingScree
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_loadingExisting)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: SizedBox(
+                  height: 6,
+                  child: AppShimmerLoader(
+                    constraints: const BoxConstraints.expand(),
+                    backgroundColor: Colors.grey.shade200,
+                    color: AppTheme.customerPrimary.withOpacity(0.7),
+                  ),
+                ),
+              ),
             Text(
               widget.serviceTitle,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.darkGrey),
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.darkGrey),
             ),
+            if ((widget.providerName ?? '').trim().isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                '${AppStrings.t(context, 'provider')}: ${widget.providerName!.trim()}',
+                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+              ),
+            ],
             const SizedBox(height: 8),
             Text(
-              'How was your experience?',
+              AppStrings.t(context, 'howWasYourExperience'),
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 20),
-            const Text('Rating', style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
+            Text(AppStrings.t(context, 'rating'),
+                style: TextStyle(
+                    fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
             const SizedBox(height: 8),
             Row(
               children: List.generate(5, (i) {
@@ -93,20 +177,25 @@ class _WriteReviewForBookingScreenState extends State<WriteReviewForBookingScree
               }),
             ),
             Text(
-              _rating == 0 ? 'Tap to rate' : '$_rating / 5',
+              _rating == 0
+                  ? AppStrings.t(context, 'tapToRate')
+                  : '$_rating / 5',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 24),
-            const Text('Comment (optional)', style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
+            Text(AppStrings.t(context, 'commentOptional'),
+                style: TextStyle(
+                    fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
             const SizedBox(height: 8),
             TextField(
               controller: _commentController,
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: 'Share your experience...',
+                hintText: AppStrings.t(context, 'shareYourExperience'),
                 filled: true,
                 fillColor: Colors.grey[50],
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 contentPadding: const EdgeInsets.all(16),
               ),
             ),
@@ -119,11 +208,18 @@ class _WriteReviewForBookingScreenState extends State<WriteReviewForBookingScree
                   backgroundColor: AppTheme.customerPrimary,
                   foregroundColor: AppTheme.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 child: _submitting
-                    ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Submit review'),
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: AppShimmerLoader(
+                            color: Colors.white, strokeWidth: 2))
+                    : Text(_hasExistingReview
+                        ? AppStrings.t(context, 'updateReview')
+                        : AppStrings.t(context, 'submitReview')),
               ),
             ),
           ],

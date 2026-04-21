@@ -1,11 +1,14 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
+import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/services/esewa_service.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:esewa_flutter_sdk/esewa_config.dart';
+import 'package:esewa_flutter_sdk/esewa_flutter_sdk.dart';
+import 'package:esewa_flutter_sdk/esewa_payment.dart';
+import 'package:esewa_flutter_sdk/esewa_payment_success_result.dart';
+import 'package:hamro_sewa_frontend/features/payment/screens/payment_receipt_screen.dart';
 
 class ESewaPaymentScreen extends StatefulWidget {
   final double amount;
@@ -30,13 +33,14 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
   bool _paymentCompleted = false;
   bool _paymentFailed = false;
   String? _errorMessage;
+  Map<String, dynamic>? _receipt;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('eSewa Payment'),
+        title: Text(AppStrings.t(context, 'eSewaPayment')),
         backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,
         elevation: 0,
@@ -51,12 +55,12 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
             if (!_paymentCompleted && !_paymentFailed) ...[
               _buildPaymentButton(),
               const SizedBox(height: 12),
-              _buildDemoPaymentButton(),
-              const SizedBox(height: 16),
               _buildCancelButton(),
             ] else if (_paymentCompleted) ...[
               _buildSuccessCard(),
               const SizedBox(height: 16),
+              _buildReceiptButtons(),
+              const SizedBox(height: 12),
               _buildContinueButton(),
             ] else ...[
               _buildFailureCard(),
@@ -102,15 +106,15 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'eSewa Payment',
-                        style: TextStyle(
+                      Text(
+                        AppStrings.t(context, 'eSewaPayment'),
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        'Secure & Fast Payment',
+                        AppStrings.t(context, 'secureFastPayment'),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -177,45 +181,29 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
           elevation: 2,
         ),
         child: _isProcessing
-            ? const Row(
+            ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
+                    child: AppShimmerLoader(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   ),
-                  SizedBox(width: 12),
-                  Text('Processing...'),
+                  const SizedBox(width: 12),
+                  Text(AppStrings.t(context, 'processing')),
                 ],
               )
-            : const Row(
+            : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.account_balance_wallet),
-                  SizedBox(width: 8),
-                  Text('Pay with eSewa'),
+                  const Icon(Icons.account_balance_wallet),
+                  const SizedBox(width: 8),
+                  Text(AppStrings.t(context, 'payWithEsewa')),
                 ],
               ),
-      ),
-    );
-  }
-
-  Widget _buildDemoPaymentButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _isProcessing ? null : _processDemoPayment,
-        icon: const Icon(Icons.science_outlined, size: 20),
-        label: const Text('Demo payment (eSewa unreachable)'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.grey[700],
-          side: BorderSide(color: Colors.grey[400]!),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-        ),
       ),
     );
   }
@@ -228,7 +216,7 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
         ),
-        child: const Text('Cancel'),
+        child: Text(AppStrings.t(context, 'cancel')),
       ),
     );
   }
@@ -255,9 +243,9 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Payment Successful!',
-              style: TextStyle(
+            Text(
+              AppStrings.t(context, 'paymentSuccessful'),
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
@@ -265,7 +253,10 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Your payment of ${ESewaService.formatAmount(widget.amount)} has been processed successfully.',
+              AppStrings.t(context, 'paymentSuccessMessage').replaceFirst(
+                '{amount}',
+                ESewaService.formatAmount(widget.amount),
+              ),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -301,7 +292,7 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Payment Failed or Cancelled',
+              AppStrings.t(context, 'paymentFailedOrCancelled'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -310,7 +301,7 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'You can try again or cancel.',
+              AppStrings.t(context, 'paymentTryAgainHint'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -341,7 +332,7 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: const Text('Try Again'),
+        child: Text(AppStrings.t(context, 'tryAgain')),
       ),
     );
   }
@@ -361,9 +352,44 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: const Text('Continue'),
+        child: Text(AppStrings.t(context, 'continue')),
       ),
     );
+  }
+
+  Widget _buildReceiptButtons() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ElevatedButton.icon(
+          onPressed: _receipt == null
+              ? null
+              : () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => PaymentReceiptScreen(receipt: _receipt!),
+                    ),
+                  ),
+          icon: const Icon(Icons.receipt_long_outlined),
+          label: const Text('View Receipt'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.customerPrimary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _loadReceipt() async {
+    try {
+      final data = await ApiService.getReceiptByBooking(widget.bookingId);
+      if (!mounted) return;
+      setState(() => _receipt = data);
+    } catch (_) {
+      // Receipt creation may lag a bit; keep success state unaffected.
+    }
   }
 
   Widget _buildErrorCard() {
@@ -402,12 +428,14 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
     });
 
     try {
+      // Create pending payment and get transaction_id (productId)
       final data = await ApiService.initiatePayment(
         bookingId: widget.bookingId,
         amount: widget.amount,
       );
-      final paymentUrl = data['payment_url'] as String?;
-      if (paymentUrl == null || paymentUrl.isEmpty) {
+      final transactionId = data['transaction_id'] as String?;
+      if (transactionId == null || transactionId.isEmpty) {
+        if (!mounted) return;
         setState(() {
           _errorMessage = 'Invalid response from server.';
           _isProcessing = false;
@@ -415,25 +443,63 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
         return;
       }
 
-      if (!mounted) return;
-      final result = await Navigator.of(context).push<Map<String, String>>(
-        MaterialPageRoute(
-          builder: (context) => _ESewaWebViewScreen(
-            paymentUrl: paymentUrl,
-            bookingId: widget.bookingId,
-          ),
+      // Launch official eSewa SDK (native payment flow)
+      EsewaFlutterSdk.initPayment(
+        esewaConfig: EsewaConfig(
+          environment: Environment.test,
+          clientId: ESewaService.clientId,
+          secretId: ESewaService.secretKey,
         ),
+        esewaPayment: EsewaPayment(
+          productId: transactionId,
+          productName: widget.serviceName,
+          productPrice: widget.amount.toString(),
+        ),
+        onPaymentSuccess: (EsewaPaymentSuccessResult result) async {
+          if (!mounted) return;
+          try {
+            await ApiService.verifyAndCompletePayment(
+              refId: result.refId,
+              productId: result.productId,
+              bookingId: widget.bookingId,
+              totalAmount: result.totalAmount,
+            );
+            if (!mounted) return;
+            setState(() {
+              _paymentCompleted = true;
+              _isProcessing = false;
+            });
+            await _loadReceipt();
+          } catch (e) {
+            if (!mounted) return;
+            setState(() {
+              _errorMessage = 'Verification failed: ${e.toString()}';
+              _isProcessing = false;
+            });
+          }
+        },
+        onPaymentFailure: (data) {
+          if (!mounted) return;
+          setState(() {
+            _paymentFailed = true;
+            _errorMessage = data?.toString() ?? 'Payment failed.';
+            _isProcessing = false;
+          });
+        },
+        onPaymentCancellation: (data) {
+          if (!mounted) return;
+          setState(() {
+            _paymentFailed = true;
+            _errorMessage = 'Payment was cancelled.';
+            _isProcessing = false;
+          });
+        },
       );
-
-      if (!mounted) return;
-      setState(() {
-        _isProcessing = false;
-        if (result != null && (result['success'] ?? '') == 'true') {
-          _paymentCompleted = true;
-        } else {
-          _paymentFailed = true;
-          _errorMessage = result?['message'] ?? 'Payment was not completed.';
-        }
+      // Stop spinner after a short delay so user isn't stuck if SDK doesn't open
+      // (e.g. emulator without eSewa app). Callbacks still run when SDK returns.
+      Future.delayed(const Duration(seconds: 2), () {
+        if (!mounted) return;
+        setState(() => _isProcessing = false);
       });
     } catch (e) {
       if (!mounted) return;
@@ -443,275 +509,6 @@ class _ESewaPaymentScreenState extends State<ESewaPaymentScreen> {
       });
     }
   }
-
-  /// Complete payment without eSewa (for testing when the gateway page does not load).
-  Future<void> _processDemoPayment() async {
-    setState(() {
-      _isProcessing = true;
-      _errorMessage = null;
-    });
-    try {
-      final data = await ApiService.initiatePayment(
-        bookingId: widget.bookingId,
-        amount: widget.amount,
-      );
-      final transactionId = data['transaction_id'] as String?;
-      await ApiService.completeDemoPayment(
-        bookingId: widget.bookingId,
-        transactionId: transactionId,
-      );
-      if (!mounted) return;
-      setState(() {
-        _paymentCompleted = true;
-        _isProcessing = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _errorMessage = 'Demo payment failed: ${e.toString()}';
-        _isProcessing = false;
-      });
-    }
-  }
 }
 
-/// Full-screen WebView that loads the eSewa payment URL and intercepts
-/// hamrosewa://payment/success and hamrosewa://payment/failure redirects.
-class _ESewaWebViewScreen extends StatefulWidget {
-  final String paymentUrl;
-  final String bookingId;
 
-  const _ESewaWebViewScreen({
-    required this.paymentUrl,
-    required this.bookingId,
-  });
-
-  @override
-  State<_ESewaWebViewScreen> createState() => _ESewaWebViewScreenState();
-}
-
-class _ESewaWebViewScreenState extends State<_ESewaWebViewScreen> {
-  late final WebViewController _controller;
-  String? _loadError;
-
-  /// Chrome desktop User-Agent so eSewa serves the payment page (some gateways block or redirect in-app WebViews).
-  static const String _chromeDesktopUserAgent =
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onNavigationRequest: (NavigationRequest request) {
-            final url = request.url;
-            if (url.startsWith('hamrosewa://payment/success')) {
-              final uri = Uri.parse(url);
-              Navigator.of(context).pop({
-                'success': 'true',
-                'booking_id': uri.queryParameters['booking_id'] ?? widget.bookingId,
-                'transaction_id': uri.queryParameters['transaction_id'] ?? '',
-              });
-              return NavigationDecision.prevent;
-            }
-            if (url.startsWith('hamrosewa://payment/failure')) {
-              final uri = Uri.parse(url);
-              Navigator.of(context).pop({
-                'success': 'false',
-                'message': 'Payment failed or was cancelled.',
-                'booking_id': uri.queryParameters['booking_id'] ?? widget.bookingId,
-                'transaction_id': uri.queryParameters['transaction_id'] ?? '',
-              });
-              return NavigationDecision.prevent;
-            }
-            return NavigationDecision.navigate;
-          },
-          onWebResourceError: (WebResourceError error) {
-            if ((error.isForMainFrame ?? true) && mounted) {
-              setState(() {
-                _loadError = error.description ?? 'Could not load payment page.';
-              });
-            }
-          },
-        ),
-      );
-    _setUserAgentAndLoad();
-  }
-
-  Future<void> _setUserAgentAndLoad() async {
-    if (Platform.isAndroid) {
-      final platform = _controller.platform;
-      if (platform is AndroidWebViewController) {
-        await platform.setUserAgent(_chromeDesktopUserAgent);
-      }
-    }
-    if (!mounted) return;
-    _controller.loadRequest(Uri.parse(widget.paymentUrl));
-  }
-
-  void _retryLoad() {
-    setState(() => _loadError = null);
-    _setUserAgentAndLoad();
-  }
-
-  Widget _buildFixDnsCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.dns, color: Colors.blue[700], size: 22),
-              const SizedBox(width: 8),
-              Text(
-                'Fix DNS (payment site not loading)',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.blue[900],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Your network may not resolve the payment gateway. Use Google or Cloudflare DNS:\n'
-            '• Open Settings → Network & Internet → WiFi → your network.\n'
-            '• Tap Advanced or IP settings → set DNS 1 to 8.8.8.8, DNS 2 to 8.8.4.4 (or use 1.1.1.1).\n'
-            '• Save, then return here and tap Retry.',
-            style: TextStyle(fontSize: 13, color: Colors.blue[900], height: 1.4),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('eSewa Payment'),
-        backgroundColor: Colors.green[700],
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop({
-            'success': 'false',
-            'message': 'Payment cancelled.',
-          }),
-        ),
-      ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _controller),
-          if (_loadError != null)
-            Container(
-              color: Colors.grey[100],
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.wifi_off, size: 64, color: Colors.orange[700]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Payment page could not load',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        '$_loadError\n\n'
-                        'Your phone needs internet (WiFi or mobile data) to load the payment page. '
-                        'If you see "ERR_NAME_NOT_RESOLVED" or "DNS", try the Fix DNS step below.',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.4),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildFixDnsCard(),
-                      const SizedBox(height: 24),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          TextButton.icon(
-                            onPressed: _retryLoad,
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Retry'),
-                          ),
-                          ElevatedButton.icon(
-                            onPressed: () async {
-                              final uri = Uri.parse(widget.paymentUrl);
-                              try {
-                                final launched = await launchUrl(
-                                  uri,
-                                  mode: LaunchMode.externalApplication,
-                                );
-                                if (context.mounted) {
-                                  if (launched) {
-                                    Navigator.of(context).pop({
-                                      'success': 'false',
-                                      'message': 'Opened in browser. Return to the app after payment.',
-                                    });
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Could not open browser. Try Retry or use another device.'),
-                                        backgroundColor: Colors.orange,
-                                      ),
-                                    );
-                                  }
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Could not open link: $e'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                            icon: const Icon(Icons.open_in_browser, size: 20),
-                            label: const Text('Open in browser'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue[700],
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.of(context).pop({
-                              'success': 'false',
-                              'message': 'Payment page could not load.',
-                            }),
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green[700]),
-                            child: const Text('Back'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}

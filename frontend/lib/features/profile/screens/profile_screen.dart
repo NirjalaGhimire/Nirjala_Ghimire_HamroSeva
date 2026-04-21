@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/services/token_storage.dart';
 import 'package:hamro_sewa_frontend/features/profile/screens/settings_screen.dart';
@@ -15,7 +16,9 @@ class ProfileScreen extends StatelessWidget {
       future: TokenStorage.getSavedUser(),
       builder: (context, snapshot) {
         final user = snapshot.data;
-        final name = user?['username'] ?? user?['email'] ?? 'User';
+        final name = user?['username'] ??
+            user?['email'] ??
+            AppStrings.t(context, 'user');
         final role = (user?['role'] ?? 'customer').toString().toUpperCase();
         if (role == 'PROVIDER') {
           // Show profession if available
@@ -23,8 +26,8 @@ class ProfileScreen extends StatelessWidget {
         return Scaffold(
           backgroundColor: AppTheme.white,
           appBar: AppBar(
-            title: const Text(
-              'Profile',
+            title: Text(
+              AppStrings.t(context, 'profile'),
               style: TextStyle(
                 color: AppTheme.white,
                 fontWeight: FontWeight.bold,
@@ -37,7 +40,9 @@ class ProfileScreen extends StatelessWidget {
                 icon: const Icon(Icons.person_outline),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Edit profile — coming soon')),
+                    SnackBar(
+                        content: Text(
+                            AppStrings.t(context, 'editProfileComingSoon'))),
                   );
                 },
               ),
@@ -74,8 +79,9 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       role == 'PROVIDER'
-                          ? (user?['profession'] ?? 'Service Provider')
-                          : 'Customer',
+                          ? (user?['profession'] ??
+                              AppStrings.t(context, 'serviceProvider'))
+                          : AppStrings.t(context, 'customer'),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -88,7 +94,7 @@ class ProfileScreen extends StatelessWidget {
               _profileTile(
                 context,
                 icon: Icons.person_outline,
-                title: 'Personal Information',
+                title: AppStrings.t(context, 'personalInformation'),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const EditGenderScreen()),
                 ),
@@ -96,21 +102,24 @@ class ProfileScreen extends StatelessWidget {
               _profileTile(
                 context,
                 icon: Icons.account_balance_wallet_outlined,
-                title: 'Payment Preferences',
-                onTap: () => _snack(context, 'Payment Preferences'),
+                title: AppStrings.t(context, 'paymentPreferences'),
+                onTap: () => _snack(
+                    context, AppStrings.t(context, 'paymentPreferences')),
               ),
               _profileTile(
                 context,
                 icon: Icons.credit_card,
-                title: 'Banks and Cards',
-                onTap: () => _snack(context, 'Banks and Cards'),
+                title: AppStrings.t(context, 'banksAndCards'),
+                onTap: () =>
+                    _snack(context, AppStrings.t(context, 'banksAndCards')),
               ),
               _profileTile(
                 context,
                 icon: Icons.notifications_outlined,
-                title: 'Notifications',
+                title: AppStrings.t(context, 'notifications'),
                 trailing: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.red,
                     borderRadius: BorderRadius.circular(10),
@@ -124,24 +133,26 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                onTap: () => _snack(context, 'Notifications'),
+                onTap: () =>
+                    _snack(context, AppStrings.t(context, 'notifications')),
               ),
               _profileTile(
                 context,
                 icon: Icons.message_outlined,
-                title: 'Message Center',
-                onTap: () => _snack(context, 'Message Center'),
+                title: AppStrings.t(context, 'messageCenter'),
+                onTap: () =>
+                    _snack(context, AppStrings.t(context, 'messageCenter')),
               ),
               _profileTile(
                 context,
                 icon: Icons.location_on_outlined,
-                title: 'Address',
-                onTap: () => _snack(context, 'Address'),
+                title: AppStrings.t(context, 'address'),
+                onTap: () => _snack(context, AppStrings.t(context, 'address')),
               ),
               _profileTile(
                 context,
                 icon: Icons.settings_outlined,
-                title: 'Settings',
+                title: AppStrings.t(context, 'settings'),
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -180,7 +191,8 @@ class ProfileScreen extends StatelessWidget {
             color: AppTheme.darkGrey,
           ),
         ),
-        trailing: trailing ?? const Icon(Icons.chevron_right, color: AppTheme.darkGrey),
+        trailing: trailing ??
+            const Icon(Icons.chevron_right, color: AppTheme.darkGrey),
         onTap: onTap,
       ),
     );
@@ -188,7 +200,7 @@ class ProfileScreen extends StatelessWidget {
 
   void _snack(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$msg — coming soon')),
+      SnackBar(content: Text('${msg} ${AppStrings.t(context, 'comingSoon')}')),
     );
   }
 }

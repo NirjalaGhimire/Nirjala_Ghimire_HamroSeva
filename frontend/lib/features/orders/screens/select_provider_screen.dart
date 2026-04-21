@@ -1,7 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/features/orders/screens/place_order_screen.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
+
+/// Match API rows even if casing / spacing differs (e.g. "First Aid Training" vs "first aid training").
+String _normalizeServiceTitle(String? s) {
+  return (s ?? '')
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'\s+'), ' ');
+}
+
+/// Same rules as backend `provider_profession_matches_catalog_service_title`: full
+/// profession string or any comma-separated token must equal [wantNormalized].
+bool _professionMatchesCatalogTitle(String? profession, String wantNormalized) {
+  final raw = (profession ?? '').toString().trim();
+  if (raw.isEmpty || wantNormalized.isEmpty) return false;
+  if (_normalizeServiceTitle(raw) == wantNormalized) return true;
+  for (final part in raw.split(',')) {
+    if (_normalizeServiceTitle(part) == wantNormalized) return true;
+  }
+  return false;
+}
+
+bool _rowMatchesSelectedService(dynamic row, String wantNormalized) {
+  final rowTitle = _normalizeServiceTitle((row['title'] ?? '').toString());
+  if (rowTitle == wantNormalized) return true;
+  return _professionMatchesCatalogTitle(
+    row['provider_profession']?.toString(),
+    wantNormalized,
+  );
+}
+
+bool _isProviderVerified(Map<String, dynamic> row) {
+  final status =
+      (row['provider_verification_status'] ?? row['verification_status'] ?? '')
+          .toString()
+          .toLowerCase()
+          .trim();
+  return status == 'approved';
+}
 
 /// Step 1: Show services (subcategories) under the category, no providers.
 /// Step 2: When user selects a service, show only providers for that service.
@@ -24,8 +65,10 @@ class SelectProviderScreen extends StatefulWidget {
 class _SelectProviderScreenState extends State<SelectProviderScreen> {
   /// All subcategory titles for step 1 (from forSignup=true so every category shows all options).
   List<dynamic> _allTitlesRows = [];
+
   /// Filtered rows (provider matches service) for step 2 – used to show providers or "no provider" dialog.
   List<dynamic> _filteredProviderRows = [];
+  Set<int> _favoriteProviderIds = <int>{};
   bool _loading = true;
   String? _error;
   Map<String, dynamic>? _selectedService;
@@ -34,6 +77,58 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
   void initState() {
     super.initState();
     _loadServices();
+    _loadFavoriteSummary();
+  }
+
+  Future<void> _loadFavoriteSummary() async {
+    try {
+      final summary = await ApiService.getFavoritesSummary();
+      final ids = <int>{};
+      for (final v
+          in List<dynamic>.from(summary['favorite_provider_ids'] ?? [])) {
+        final n = v is int ? v : int.tryParse(v.toString());
+        if (n != null) ids.add(n);
+      }
+      if (mounted) {
+        setState(() => _favoriteProviderIds = ids);
+      }
+    } catch (_) {
+      // Ignore summary errors; providers can still be selected.
+    }
+  }
+
+  Future<void> _toggleProviderFavorite(int providerId) async {
+    final already = _favoriteProviderIds.contains(providerId);
+    setState(() {
+      if (already) {
+        _favoriteProviderIds.remove(providerId);
+      } else {
+        _favoriteProviderIds.add(providerId);
+      }
+    });
+    try {
+      if (already) {
+        await ApiService.removeFavoriteProvider(providerId);
+      } else {
+        await ApiService.addFavoriteProvider(providerId);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (already) {
+          _favoriteProviderIds.add(providerId);
+        } else {
+          _favoriteProviderIds.remove(providerId);
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not update favorite: ${e.toString().replaceFirst('Exception: ', '')}',
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _loadServices() async {
@@ -46,8 +141,10 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
       final id = widget.categoryId;
       final isNumeric = int.tryParse(id) != null;
       if (isNumeric) {
-        final allTitles = await ApiService.getServicesByCategory(id, forSignup: true);
-        final filtered = await ApiService.getServicesByCategory(id, forSignup: false);
+        final allTitles =
+            await ApiService.getServicesByCategory(id, forSignup: true);
+        final filtered =
+            await ApiService.getServicesByCategory(id, forSignup: false);
         if (mounted) {
           setState(() {
             _allTitlesRows = allTitles;
@@ -56,14 +153,25 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
           });
         }
       } else {
+        // Legacy: prefer strict category_id match; fuzzy match only as fallback (avoids cross-category bleed)
         final all = await ApiService.getServices();
+        final wantId = widget.categoryId.trim();
         final titleLower = widget.categoryTitle.toLowerCase().trim();
         final list = all.where((s) {
-          final catName = (s['category_name'] ?? s['category'] ?? '').toString().toLowerCase();
+          final sid = s['category_id']?.toString();
+          if (sid != null && sid == wantId) return true;
+          final catName = (s['category_name'] ?? s['category'] ?? '')
+              .toString()
+              .toLowerCase();
           final serviceTitle = (s['title'] ?? '').toString().toLowerCase();
-          if (catName.contains(titleLower) || titleLower.contains(catName)) return true;
-          final stem = titleLower.length >= 5 ? titleLower.substring(0, 5) : titleLower;
-          if (stem.length >= 4 && (catName.contains(stem) || catName.startsWith(stem) || serviceTitle.contains(stem))) return true;
+          if (catName.contains(titleLower) || titleLower.contains(catName))
+            return true;
+          final stem =
+              titleLower.length >= 5 ? titleLower.substring(0, 5) : titleLower;
+          if (stem.length >= 4 &&
+              (catName.contains(stem) ||
+                  catName.startsWith(stem) ||
+                  serviceTitle.contains(stem))) return true;
           return false;
         }).toList();
         if (mounted) {
@@ -102,33 +210,48 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
   }
 
   /// Providers for the selected service (filtered list – only matching providers).
+  /// Dedupe by provider_id so the same person is not listed twice (duplicate seva_service rows / equivalent titles).
   List<Map<String, dynamic>> get _providerRowsForSelectedService {
     if (_selectedService == null) return [];
-    final wantTitle = (_selectedService!['title'] ?? '').toString().trim();
+    final wantTitle = _normalizeServiceTitle(
+      (_selectedService!['title'] ?? '').toString(),
+    );
     if (wantTitle.isEmpty) return [];
-    return _filteredProviderRows
-        .where((row) => (row['title'] ?? '').toString().trim() == wantTitle)
+    final raw = _filteredProviderRows
+        .where((row) => _rowMatchesSelectedService(row, wantTitle))
         .map((e) => Map<String, dynamic>.from(e))
         .toList();
+    final seen = <int>{};
+    final out = <Map<String, dynamic>>[];
+    for (final row in raw) {
+      final pid = row['provider_id'];
+      final pidInt = pid is int ? pid : int.tryParse(pid?.toString() ?? '');
+      if (pidInt == null) continue;
+      if (seen.contains(pidInt)) continue;
+      seen.add(pidInt);
+      out.add(row);
+    }
+    return out;
   }
 
   void _onSelectService(Map<String, dynamic> service) {
     final title = (service['title'] ?? '').toString().trim();
+    final want = _normalizeServiceTitle(title);
     final providers = _filteredProviderRows
-        .where((row) => (row['title'] ?? '').toString().trim() == title)
+        .where((row) => _rowMatchesSelectedService(row, want))
         .toList();
     if (providers.isEmpty) {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('No provider available'),
+          title: Text(AppStrings.t(context, 'noProviderAvailable')),
           content: Text(
-            'No service provider is available for "$title" at the moment. Please try another service or check back later.',
+            '${AppStrings.t(context, 'noServiceProviderAvailableFor')} "$title". ${AppStrings.t(context, 'tryAnotherServiceOrLater')}',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('OK'),
+              child: Text(AppStrings.t(context, 'ok')),
             ),
           ],
         ),
@@ -146,9 +269,9 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
     final id = row['id'];
     final title = (row['title'] ?? 'Service') as String;
     final providerName = (row['provider_name'] ?? 'Provider') as String;
-    final price = (row['price'] != null)
-        ? (double.tryParse(row['price'].toString()) ?? 0.0)
-        : 0.0;
+    final providerId = row['provider_id'] is int
+        ? row['provider_id'] as int
+        : int.tryParse((row['provider_id'] ?? '').toString());
     if (id == null) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -159,7 +282,9 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
           serviceId: id is int ? id : int.tryParse(id.toString()) ?? 0,
           serviceTitle: title,
           providerName: providerName,
-          price: price,
+          providerId: providerId,
+          // Request-based pricing — not the catalog/listing price.
+          price: 0,
         ),
       ),
     );
@@ -171,8 +296,11 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
       backgroundColor: AppTheme.white,
       appBar: AppBar(
         title: Text(
-          _selectedService == null ? 'Choose service' : 'Choose provider',
-          style: const TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold),
+          _selectedService == null
+              ? AppStrings.t(context, 'chooseService')
+              : AppStrings.t(context, 'chooseProvider'),
+          style: const TextStyle(
+              color: AppTheme.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: AppTheme.customerPrimary,
         foregroundColor: AppTheme.white,
@@ -195,7 +323,8 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.customerPrimary));
+      return const Center(
+          child: AppShimmerLoader(color: AppTheme.customerPrimary));
     }
     if (_error != null) {
       return Center(
@@ -206,9 +335,13 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
             children: [
               Icon(Icons.error_outline, size: 64, color: Colors.grey[600]),
               const SizedBox(height: 16),
-              Text(_error!, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[700])),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[700])),
               const SizedBox(height: 16),
-              TextButton(onPressed: _loadServices, child: const Text('Retry')),
+              TextButton(
+                  onPressed: _loadServices,
+                  child: Text(AppStrings.t(context, 'retry'))),
             ],
           ),
         ),
@@ -223,10 +356,11 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.build_circle_outlined, size: 64, color: Colors.grey[400]),
+              Icon(Icons.build_circle_outlined,
+                  size: 64, color: Colors.grey[400]),
               const SizedBox(height: 16),
               Text(
-                'No services under ${widget.categoryTitle} yet',
+                '${AppStrings.t(context, 'noServicesUnder')} ${widget.categoryTitle} ${AppStrings.t(context, 'yet')}',
                 style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
@@ -259,8 +393,10 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: AppTheme.customerPrimary.withOpacity(0.15),
-                        child: const Icon(Icons.build_circle_outlined, size: 28, color: AppTheme.customerPrimary),
+                        backgroundColor:
+                            AppTheme.customerPrimary.withOpacity(0.15),
+                        child: const Icon(Icons.build_circle_outlined,
+                            size: 28, color: AppTheme.customerPrimary),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -295,14 +431,14 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
             Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'No providers registered for $serviceTitle yet',
+              '${AppStrings.t(context, 'noProvidersRegisteredFor')} $serviceTitle ${AppStrings.t(context, 'yet')}',
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: _onBackFromProviders,
-              child: const Text('Back to services'),
+              child: Text(AppStrings.t(context, 'backToServices')),
             ),
           ],
         ),
@@ -318,7 +454,22 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
           final row = providers[index];
           final title = (row['title'] ?? 'Service') as String;
           final providerName = (row['provider_name'] ?? 'Provider') as String;
-          final price = row['price']?.toString() ?? '0';
+          final providerId = row['provider_id'] is int
+              ? row['provider_id'] as int
+              : int.tryParse((row['provider_id'] ?? '').toString());
+          final prof = (row['provider_profession'] ?? '').toString().trim();
+          final subtitle = prof.isNotEmpty ? prof : title;
+          final verified = _isProviderVerified(row);
+          final ratingAverage = (() {
+            final value = row['rating_average'];
+            if (value is num) return value.toDouble();
+            return double.tryParse(value?.toString() ?? '') ?? 0.0;
+          })();
+          final ratingCount = (() {
+            final value = row['rating_count'];
+            if (value is num) return value.toInt();
+            return int.tryParse(value?.toString() ?? '') ?? 0;
+          })();
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
             elevation: 0,
@@ -335,9 +486,12 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
                   children: [
                     CircleAvatar(
                       radius: 28,
-                      backgroundColor: AppTheme.customerPrimary.withOpacity(0.15),
+                      backgroundColor:
+                          AppTheme.customerPrimary.withOpacity(0.15),
                       child: Text(
-                        providerName.isNotEmpty ? providerName[0].toUpperCase() : 'P',
+                        providerName.isNotEmpty
+                            ? providerName[0].toUpperCase()
+                            : 'P',
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -360,25 +514,70 @@ class _SelectProviderScreenState extends State<SelectProviderScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            title,
+                            subtitle,
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: verified
+                                  ? Colors.green.withOpacity(0.12)
+                                  : Colors.orange.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              verified ? 'Verified' : 'Unverified',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: verified
+                                    ? Colors.green[800]
+                                    : Colors.orange[800],
+                              ),
+                            ),
+                          ),
+                          if (ratingCount > 0) ...[
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(Icons.star,
+                                    size: 16, color: Colors.amber),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${ratingAverage.toStringAsFixed(1)} ($ratingCount)',
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.grey[700]),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
-                    Text(
-                      'Rs. $price',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: AppTheme.customerPrimary,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            providerId != null &&
+                                    _favoriteProviderIds.contains(providerId)
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: AppTheme.linkRed,
+                          ),
+                          onPressed: providerId == null
+                              ? null
+                              : () => _toggleProviderFavorite(providerId),
+                        ),
+                        const Icon(Icons.chevron_right,
+                            color: AppTheme.darkGrey),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.chevron_right, color: AppTheme.darkGrey),
                   ],
                 ),
               ),

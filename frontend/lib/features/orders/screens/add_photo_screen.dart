@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -28,6 +29,8 @@ class _AddPhotoScreenState extends State<AddPhotoScreen> {
       final XFile? file = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 85,
+        maxWidth: 2048,
+        maxHeight: 2048,
       );
       if (file != null && mounted) {
         setState(() => _paths.add(file.path));
@@ -35,7 +38,7 @@ class _AddPhotoScreenState extends State<AddPhotoScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gallery: $e')),
+          SnackBar(content: Text('${AppStrings.t(context, 'gallery')}: $e')),
         );
       }
     }
@@ -46,6 +49,8 @@ class _AddPhotoScreenState extends State<AddPhotoScreen> {
       final XFile? file = await _picker.pickImage(
         source: ImageSource.camera,
         imageQuality: 85,
+        maxWidth: 2048,
+        maxHeight: 2048,
       );
       if (file != null && mounted) {
         setState(() => _paths.add(file.path));
@@ -53,7 +58,7 @@ class _AddPhotoScreenState extends State<AddPhotoScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Camera: $e')),
+          SnackBar(content: Text('${AppStrings.t(context, 'camera')}: $e')),
         );
       }
     }
@@ -68,13 +73,19 @@ class _AddPhotoScreenState extends State<AddPhotoScreen> {
     return Scaffold(
       backgroundColor: AppTheme.lightLavender,
       appBar: AppBar(
-        title: const Text('Add photo', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        title: Text(AppStrings.t(context, 'addPhoto'),
+            style: const TextStyle(
+                color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.darkGrey,
         foregroundColor: AppTheme.white,
         actions: [
           TextButton(
-            onPressed: _paths.isEmpty ? null : () => Navigator.pop(context, _paths),
-            child: Text('Save', style: TextStyle(color: _paths.isEmpty ? Colors.grey : AppTheme.white, fontWeight: FontWeight.w600)),
+            onPressed:
+                _paths.isEmpty ? null : () => Navigator.pop(context, _paths),
+            child: Text(AppStrings.t(context, 'save'),
+                style: TextStyle(
+                    color: _paths.isEmpty ? Colors.grey : AppTheme.white,
+                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -84,9 +95,8 @@ class _AddPhotoScreenState extends State<AddPhotoScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: _paths.isEmpty
-                  ? _buildEmptyPlaceholder()
-                  : _buildPhotoGrid(),
+              child:
+                  _paths.isEmpty ? _buildEmptyPlaceholder() : _buildPhotoGrid(),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -94,7 +104,7 @@ class _AddPhotoScreenState extends State<AddPhotoScreen> {
               child: OutlinedButton.icon(
                 onPressed: _chooseFromGallery,
                 icon: const Icon(Icons.photo_library_outlined),
-                label: const Text('Choose from Gallery'),
+                label: Text(AppStrings.t(context, 'chooseFromGallery')),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.darkGrey,
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -108,7 +118,7 @@ class _AddPhotoScreenState extends State<AddPhotoScreen> {
               child: OutlinedButton.icon(
                 onPressed: _takePhoto,
                 icon: const Icon(Icons.camera_alt_outlined),
-                label: const Text('Take Photo'),
+                label: Text(AppStrings.t(context, 'takePhoto')),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.darkGrey,
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -135,7 +145,7 @@ class _AddPhotoScreenState extends State<AddPhotoScreen> {
           Icon(Icons.photo_library_outlined, size: 80, color: Colors.grey[600]),
           const SizedBox(height: 12),
           Text(
-            'Add photos for your request',
+            AppStrings.t(context, 'addPhotosForRequest'),
             style: TextStyle(fontSize: 16, color: Colors.grey[700]),
           ),
         ],

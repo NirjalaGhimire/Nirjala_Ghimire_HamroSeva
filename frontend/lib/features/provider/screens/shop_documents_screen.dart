@@ -6,31 +6,31 @@ import 'package:hamro_sewa_frontend/features/provider/widgets/provider_app_bar.d
 import 'package:hamro_sewa_frontend/services/api_service.dart';
 
 /// Document type key (backend) -> display label.
-const Map<String, String> _docTypeLabels = {
-  'work_licence': 'Work Licence',
-  'passport': 'Passport',
-  'citizenship_card': 'Citizenship Card',
-  'national_id': 'National Identification Card',
+const Map<String, String> _shopDocTypeLabels = {
+  'shop_license': 'Shop License',
+  'business_registration': 'Business Registration',
+  'tax_certificate': 'Tax Certificate',
+  'shop_photo': 'Shop Photo',
 };
 
-const List<String> _docTypeKeys = [
-  'work_licence',
-  'passport',
-  'citizenship_card',
-  'national_id',
+const List<String> _shopDocTypeKeys = [
+  'shop_license',
+  'business_registration',
+  'tax_certificate',
+  'shop_photo',
 ];
 
-/// Verify Your Id: document types (Work Licence, Passport, Citizenship Card, National ID) connected to backend.
-class VerifyIdScreen extends StatefulWidget {
-  const VerifyIdScreen({super.key});
+/// Shop Documents screen: upload and manage documents used for verifying your shop.
+class ShopDocumentsScreen extends StatefulWidget {
+  const ShopDocumentsScreen({super.key});
 
   @override
-  State<VerifyIdScreen> createState() => _VerifyIdScreenState();
+  State<ShopDocumentsScreen> createState() => _ShopDocumentsScreenState();
 }
 
-class _VerifyIdScreenState extends State<VerifyIdScreen> {
+class _ShopDocumentsScreenState extends State<ShopDocumentsScreen> {
   int _selectedDocIndex = 0;
-  List<Map<String, dynamic>> _verifications = [];
+  List<Map<String, dynamic>> _documents = [];
   bool _loading = true;
   String? _error;
   bool _submitting = false;
@@ -48,28 +48,28 @@ class _VerifyIdScreenState extends State<VerifyIdScreen> {
     });
     try {
       final list = await ApiService.getProviderVerifications();
-      if (mounted) {
-        setState(() {
-          _verifications =
-              (list).map((e) => Map<String, dynamic>.from(e as Map)).toList();
-          _loading = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _documents = (list)
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .where((doc) => _shopDocTypeKeys.contains(doc['document_type']))
+            .toList();
+        _loading = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString().replaceFirst('Exception: ', '');
-          _verifications = [];
-          _loading = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+        _documents = [];
+        _loading = false;
+      });
     }
   }
 
   Future<void> _addDocument() async {
-    final docType = _docTypeKeys[_selectedDocIndex];
-    final label = _docTypeLabels[docType] ?? docType;
-    final result = await showDialog<_AddDocResult>(
+    final docType = _shopDocTypeKeys[_selectedDocIndex];
+    final label = _shopDocTypeLabels[docType] ?? docType;
+    final result = await showDialog<_AddDocResult?>(
       context: context,
       builder: (ctx) => _AddDocumentDialog(
         label: label,
@@ -169,50 +169,6 @@ class _VerifyIdScreenState extends State<VerifyIdScreen> {
     }
   }
 
-  Future<void> _editDocument(Map<String, dynamic> doc) async {
-    final id = doc['id'];
-    final docType = (doc['document_type'] ?? '').toString();
-    final label = _docTypeLabels[docType] ?? docType;
-    final currentDocNumber = (doc['document_number'] ?? '').toString();
-
-    if (id == null) return;
-
-    final result = await showDialog<_AddDocResult>(
-      context: context,
-      builder: (ctx) => _EditDocumentDialog(
-        verificationId: id is int ? id : int.tryParse(id.toString()) ?? 0,
-        label: label,
-        currentDocNumber: currentDocNumber,
-      ),
-    );
-    if (result == null) return;
-
-    setState(() => _submitting = true);
-    try {
-      final verificationId = id is int ? id : int.tryParse(id.toString()) ?? 0;
-      await ApiService.updateProviderVerification(
-        verificationId: verificationId,
-        documentNumber: result.documentNumber?.trim(),
-        filePath: result.file?.path,
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Document updated')),
-      );
-      await _load();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red[700],
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -221,7 +177,7 @@ class _VerifyIdScreenState extends State<VerifyIdScreen> {
         leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context)),
-        title: const Text('Verify Your Id',
+        title: const Text('Shop Documents',
             style:
                 TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.customerPrimary,
@@ -249,11 +205,11 @@ class _VerifyIdScreenState extends State<VerifyIdScreen> {
               height: 44,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: _docTypeKeys.length,
+                itemCount: _shopDocTypeKeys.length,
                 itemBuilder: (context, index) {
                   final selected = _selectedDocIndex == index;
-                  final label = _docTypeLabels[_docTypeKeys[index]] ??
-                      _docTypeKeys[index];
+                  final label = _shopDocTypeLabels[_shopDocTypeKeys[index]] ??
+                      _shopDocTypeKeys[index];
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
@@ -310,10 +266,12 @@ class _VerifyIdScreenState extends State<VerifyIdScreen> {
             _loading
                 ? const Center(
                     child: Padding(
-                        padding: EdgeInsets.all(24),
-                        child: AppShimmerLoader(
-                            color: AppTheme.customerPrimary)))
-                : _verifications.isEmpty
+                      padding: EdgeInsets.all(24),
+                      child: AppShimmerLoader(
+                          color: AppTheme.customerPrimary),
+                    ),
+                  )
+                : _documents.isEmpty
                     ? Padding(
                         padding: const EdgeInsets.symmetric(vertical: 24),
                         child: Center(
@@ -328,17 +286,16 @@ class _VerifyIdScreenState extends State<VerifyIdScreen> {
                     : ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _verifications.length,
+                        itemCount: _documents.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
-                          final doc = _verifications[index];
+                          final doc = _documents[index];
                           final type = (doc['document_type'] ?? '').toString();
-                          final label = _docTypeLabels[type] ?? type;
+                          final label = _shopDocTypeLabels[type] ?? type;
                           final status = (doc['status'] ?? 'pending')
                               .toString()
                               .toLowerCase();
-                          final verified =
-                              status == 'verified' || status == 'approved';
+                          final verified = status == 'verified' || status == 'approved';
                           final color = verified
                               ? Colors.green
                               : AppTheme.customerPrimary;
@@ -346,7 +303,7 @@ class _VerifyIdScreenState extends State<VerifyIdScreen> {
                             label: label,
                             verified: verified,
                             color: color,
-                            onEdit: verified ? null : () => _editDocument(doc),
+                            onEdit: verified ? null : () {},
                             onDelete:
                                 verified ? null : () => _deleteDocument(doc),
                           );
@@ -539,140 +496,6 @@ class _AddDocumentDialogState extends State<_AddDocumentDialog> {
           style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.customerPrimary),
           child: const Text('Add'),
-        ),
-      ],
-    );
-  }
-}
-
-class _EditDocumentDialog extends StatefulWidget {
-  final int verificationId;
-  final String label;
-  final String currentDocNumber;
-
-  const _EditDocumentDialog({
-    required this.verificationId,
-    required this.label,
-    required this.currentDocNumber,
-  });
-
-  @override
-  State<_EditDocumentDialog> createState() => _EditDocumentDialogState();
-}
-
-class _EditDocumentDialogState extends State<_EditDocumentDialog> {
-  late TextEditingController _numberController;
-  PlatformFile? _pickedFile;
-  bool _picking = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _numberController = TextEditingController(text: widget.currentDocNumber);
-  }
-
-  @override
-  void dispose() {
-    _numberController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickFile() async {
-    setState(() => _picking = true);
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp'],
-        withData: true,
-      );
-      if (result != null && result.files.isNotEmpty && mounted) {
-        setState(() {
-          _pickedFile = result.files.first;
-          _picking = false;
-        });
-      } else if (mounted) {
-        setState(() => _picking = false);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _picking = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Edit ${widget.label}'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _numberController,
-              decoration: const InputDecoration(
-                labelText: 'Document number (optional)',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.text,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Replace document (optional)',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            const SizedBox(height: 6),
-            OutlinedButton.icon(
-              onPressed: _picking ? null : _pickFile,
-              icon: _picking
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: AppShimmerLoader(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.folder_open),
-              label: Text(
-                _pickedFile != null
-                    ? _pickedFile!.name
-                    : 'Choose new file (optional)',
-              ),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 48),
-                side: const BorderSide(color: AppTheme.customerPrimary),
-                foregroundColor: AppTheme.customerPrimary,
-              ),
-            ),
-            if (_pickedFile != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  'Selected: ${_pickedFile!.name}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(
-            context,
-            _AddDocResult(
-              documentNumber: _numberController.text.trim(),
-              file: _pickedFile,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.customerPrimary),
-          child: const Text('Save'),
         ),
       ],
     );

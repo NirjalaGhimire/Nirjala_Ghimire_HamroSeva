@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/features/reviews/screens/write_review_screen.dart';
 
@@ -11,7 +12,9 @@ class RatingsReviewsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.lightLavender,
       appBar: AppBar(
-        title: const Text('Ratings & Reviews', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        title: Text(AppStrings.t(context, 'ratingsAndReviews'),
+            style: const TextStyle(
+                color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.darkGrey,
         foregroundColor: AppTheme.white,
       ),
@@ -21,15 +24,19 @@ class RatingsReviewsScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                'Ratings & Reviews',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.darkGrey),
+              Text(
+                AppStrings.t(context, 'ratingsAndReviews'),
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.darkGrey),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
-                'Share your thoughts with other customers',
-                style: TextStyle(fontSize: 15, color: AppTheme.darkGrey.withOpacity(0.8)),
+                AppStrings.t(context, 'shareThoughtsWithCustomers'),
+                style: TextStyle(
+                    fontSize: 15, color: AppTheme.darkGrey.withOpacity(0.8)),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -37,14 +44,15 @@ class RatingsReviewsScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const WriteReviewScreen()),
+                    MaterialPageRoute(
+                        builder: (_) => const WriteReviewScreen()),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.darkGrey,
                     foregroundColor: AppTheme.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('Write a review'),
+                  child: Text(AppStrings.t(context, 'writeReview')),
                 ),
               ),
             ],

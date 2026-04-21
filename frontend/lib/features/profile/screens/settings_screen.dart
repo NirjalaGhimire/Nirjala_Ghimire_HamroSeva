@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/features/profile/screens/change_password_screen.dart';
 import 'package:hamro_sewa_frontend/features/profile/screens/contact_us_screen.dart';
+import 'package:hamro_sewa_frontend/features/profile/screens/language_settings_screen.dart';
 import 'package:hamro_sewa_frontend/features/profile/screens/my_profile_screen.dart';
 import 'package:hamro_sewa_frontend/features/profile/screens/privacy_policy_screen.dart';
+import 'package:hamro_sewa_frontend/features/profile/screens/theme_settings_screen.dart';
+import 'package:hamro_sewa_frontend/services/token_storage.dart';
 
-/// Settings screen: General (Language, My Profile, Contact Us),
-/// Security (Change Password, Privacy Policy, Biometric toggle).
+/// Settings: General, Theme, App Language, Notifications (future), Security.
+/// Theme and Language open dedicated pages; all use theme colors for contrast.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -15,112 +18,142 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _biometricEnabled = false;
+  bool _notificationsEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocalSettings();
+  }
+
+  Future<void> _loadLocalSettings() async {
+    final notifications = await TokenStorage.getNotificationsEnabled();
+    if (!mounted) return;
+    setState(() {
+      _notificationsEnabled = notifications;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppTheme.lightLavender,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            color: AppTheme.white,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Text(
+          AppStrings.t(context, 'settings'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: AppTheme.darkGrey,
-        foregroundColor: AppTheme.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.print_outlined),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Print — coming soon')),
-              );
-            },
-          ),
-        ],
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'General',
+          Text(
+            AppStrings.t(context, 'general'),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppTheme.darkGrey,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
           _settingsTile(
             context,
-            title: 'Language',
-            subtitle: null,
-            value: 'English',
-            onTap: () => _snack(context, 'Language'),
-          ),
-          _settingsTile(
-            context,
-            title: 'My Profile',
-            subtitle: 'View your account information',
+            title: AppStrings.t(context, 'myProfile'),
+            subtitle: AppStrings.t(context, 'viewProfile'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const MyProfileScreen()),
             ),
           ),
           _settingsTile(
             context,
-            title: 'Contact Us',
-            subtitle: 'Phone, email and support',
+            title: AppStrings.t(context, 'contactUs'),
+            subtitle: AppStrings.t(context, 'contactUsSubtitle'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const ContactUsScreen()),
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Security',
+          Text(
+            AppStrings.t(context, 'theme'),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppTheme.darkGrey,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
           _settingsTile(
             context,
-            title: 'Change Password',
-            subtitle: 'Update your password',
+            title: AppStrings.t(context, 'appTheme'),
+            subtitle: AppStrings.t(context, 'lightDarkOrSystemPrimaryColor'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            AppStrings.t(context, 'language'),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _settingsTile(
+            context,
+            title: AppStrings.t(context, 'language'),
+            subtitle: AppStrings.t(context, 'selectYourLanguage'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const LanguageSettingsScreen()),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            AppStrings.t(context, 'notifications'),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _settingsTile(
+            context,
+            title: AppStrings.t(context, 'notifications'),
+            subtitle: AppStrings.t(context, 'pushAndInAppNotifications'),
+            value: _notificationsEnabled
+                ? AppStrings.t(context, 'on')
+                : AppStrings.t(context, 'off'),
+            onTap: () => _toggleNotifications(context),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            AppStrings.t(context, 'security'),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _settingsTile(
+            context,
+            title: AppStrings.t(context, 'changePassword'),
+            subtitle: AppStrings.t(context, 'updatePassword'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
             ),
           ),
           _settingsTile(
             context,
-            title: 'Privacy Policy',
-            subtitle: 'How we use your data',
+            title: AppStrings.t(context, 'privacyPolicy'),
+            subtitle: AppStrings.t(context, 'privacyPolicySubtitle'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
-            ),
-          ),
-          Card(
-            elevation: 0,
-            margin: const EdgeInsets.only(bottom: 8),
-            color: AppTheme.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: SwitchListTile(
-              title: const Text(
-                'Biometric',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.darkGrey,
-                ),
-              ),
-              value: _biometricEnabled,
-              onChanged: (v) => setState(() => _biometricEnabled = v),
-              activeThumbColor: AppTheme.darkGrey,
             ),
           ),
         ],
@@ -135,19 +168,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String? value,
     VoidCallback? onTap,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 8),
-      color: AppTheme.white,
+      color: colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colorScheme.outline),
       ),
       child: ListTile(
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w500,
-            color: AppTheme.darkGrey,
+            color: colorScheme.onSurface,
           ),
         ),
         subtitle: subtitle != null
@@ -155,7 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: colorScheme.onSurfaceVariant,
                 ),
               )
             : null,
@@ -166,22 +201,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     value,
                     style: TextStyle(
-                      color: Colors.grey[700],
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 14,
                     ),
                   ),
-                  const Icon(Icons.chevron_right, color: AppTheme.darkGrey),
+                  Icon(Icons.chevron_right, color: colorScheme.onSurface),
                 ],
               )
-            : const Icon(Icons.chevron_right, color: AppTheme.darkGrey),
+            : Icon(Icons.chevron_right, color: colorScheme.onSurface),
         onTap: onTap,
       ),
     );
   }
 
-  void _snack(BuildContext context, String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$msg — coming soon')),
+  Future<void> _toggleNotifications(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final next = !_notificationsEnabled;
+    setState(() => _notificationsEnabled = next);
+    await TokenStorage.setNotificationsEnabled(next);
+    if (!mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          next
+              ? AppStrings.t(context, 'notificationsTurnedOn')
+              : AppStrings.t(context, 'notificationsTurnedOff'),
+        ),
+      ),
     );
   }
 }

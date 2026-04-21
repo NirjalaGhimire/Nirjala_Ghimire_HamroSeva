@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
 import 'package:hamro_sewa_frontend/services/token_storage.dart';
@@ -83,7 +85,9 @@ class _ProviderPersonalInfoScreenState extends State<ProviderPersonalInfoScreen>
           _editMode = false;
           _saving = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.t(context, 'profileUpdated'))),
+        );
       }
         } catch (e) {
       if (mounted) {
@@ -100,21 +104,21 @@ class _ProviderPersonalInfoScreenState extends State<ProviderPersonalInfoScreen>
     return Scaffold(
       backgroundColor: AppTheme.white,
       appBar: AppBar(
-        title: const Text('Personal Information', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        title: Text(AppStrings.t(context, 'personalInformation'), style: const TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.customerPrimary,
         foregroundColor: AppTheme.white,
         actions: [
           if (!_editMode && _profile != null)
             TextButton(
               onPressed: () => setState(() => _editMode = true),
-              child: const Text('Edit', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.w600)),
+              child: Text(AppStrings.t(context, 'edit'), style: const TextStyle(color: AppTheme.white, fontWeight: FontWeight.w600)),
             ),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.customerPrimary))
+          ? const AppPageShimmer()
           : _profile == null
-              ? const Center(child: Text('Could not load profile'))
+              ? Center(child: Text(AppStrings.t(context, 'couldNotLoadProfile')))
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: _editMode
@@ -123,24 +127,24 @@ class _ProviderPersonalInfoScreenState extends State<ProviderPersonalInfoScreen>
                           children: [
                             TextField(
                               controller: _username,
-                              decoration: const InputDecoration(labelText: 'Username', border: OutlineInputBorder()),
+                              decoration: InputDecoration(labelText: AppStrings.t(context, 'username'), border: const OutlineInputBorder()),
                             ),
                             const SizedBox(height: 16),
                             TextField(
                               controller: _email,
                               keyboardType: TextInputType.emailAddress,
-                              decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+                              decoration: InputDecoration(labelText: AppStrings.t(context, 'email'), border: const OutlineInputBorder()),
                             ),
                             const SizedBox(height: 16),
                             TextField(
                               controller: _phone,
                               keyboardType: TextInputType.phone,
-                              decoration: const InputDecoration(labelText: 'Phone', border: OutlineInputBorder()),
+                              decoration: InputDecoration(labelText: AppStrings.t(context, 'phone'), border: const OutlineInputBorder()),
                             ),
                             const SizedBox(height: 16),
                             TextField(
                               controller: _profession,
-                              decoration: const InputDecoration(labelText: 'Profession', border: OutlineInputBorder()),
+                              decoration: InputDecoration(labelText: AppStrings.t(context, 'profession'), border: const OutlineInputBorder()),
                             ),
                             const SizedBox(height: 24),
                             ElevatedButton(
@@ -151,24 +155,24 @@ class _ProviderPersonalInfoScreenState extends State<ProviderPersonalInfoScreen>
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                               ),
                               child: _saving
-                                  ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                  : const Text('Save'),
+                                  ? const SizedBox(height: 22, width: 22, child: AppShimmerLoader(color: Colors.white, strokeWidth: 2))
+                                  : Text(AppStrings.t(context, 'save')),
                             ),
                             const SizedBox(height: 8),
                             TextButton(
                               onPressed: () => setState(() => _editMode = false),
-                              child: const Text('Cancel'),
+                              child: Text(AppStrings.t(context, 'cancel')),
                             ),
                           ],
                         )
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _row('Username', (_profile!['username'] ?? '—').toString()),
-                            _row('Email', (_profile!['email'] ?? '—').toString()),
-                            _row('Phone', (_profile!['phone'] ?? '').toString().isEmpty ? '—' : (_profile!['phone']).toString()),
-                            _row('Profession', (_profile!['profession'] ?? '').toString().isEmpty ? '—' : (_profile!['profession']).toString()),
-                            _row('Role', (_profile!['role'] ?? '—').toString()),
+                            _row(AppStrings.t(context, 'username'), (_profile!['username'] ?? AppStrings.t(context, 'unavailable')).toString()),
+                            _row(AppStrings.t(context, 'email'), (_profile!['email'] ?? AppStrings.t(context, 'unavailable')).toString()),
+                            _row(AppStrings.t(context, 'phone'), (_profile!['phone'] ?? '').toString().isEmpty ? AppStrings.t(context, 'unavailable') : (_profile!['phone']).toString()),
+                            _row(AppStrings.t(context, 'profession'), (_profile!['profession'] ?? '').toString().isEmpty ? AppStrings.t(context, 'unavailable') : (_profile!['profession']).toString()),
+                            _row(AppStrings.t(context, 'role'), (_profile!['role'] ?? AppStrings.t(context, 'unavailable')).toString()),
                           ],
                         ),
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 
 /// Details screen: "Add Details" multi-line text field, Save button.
@@ -31,13 +32,17 @@ class _AddDetailsScreenState extends State<AddDetailsScreen> {
     return Scaffold(
       backgroundColor: AppTheme.lightLavender,
       appBar: AppBar(
-        title: const Text('Details', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        title: Text(AppStrings.t(context, 'details'),
+            style: const TextStyle(
+                color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.darkGrey,
         foregroundColor: AppTheme.white,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, _controller.text),
-            child: const Text('Save', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.w600)),
+            child: Text(AppStrings.t(context, 'save'),
+                style: const TextStyle(
+                    color: AppTheme.white, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -46,9 +51,12 @@ class _AddDetailsScreenState extends State<AddDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Add Details',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey),
+            Text(
+              AppStrings.t(context, 'addDetails'),
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.darkGrey),
             ),
             const SizedBox(height: 12),
             Expanded(
@@ -58,11 +66,12 @@ class _AddDetailsScreenState extends State<AddDetailsScreen> {
                 expands: true,
                 textAlignVertical: TextAlignVertical.top,
                 decoration: InputDecoration(
-                  hintText: 'Lorem ipsum dolor sit amet consectetur. Dui dignissim massa magna urna augue cursus tempor vitae. Nulla mus urna.',
+                  hintText: AppStrings.t(context, 'enterServiceDetailsHint'),
                   alignLabelWithHint: true,
                   filled: true,
                   fillColor: AppTheme.white,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   contentPadding: const EdgeInsets.all(16),
                 ),
               ),

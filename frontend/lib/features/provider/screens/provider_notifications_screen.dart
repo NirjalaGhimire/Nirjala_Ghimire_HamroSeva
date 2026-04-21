@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
+import 'package:hamro_sewa_frontend/features/notifications/utils/notification_localizer.dart';
+import 'package:hamro_sewa_frontend/features/orders/screens/booking_detail_screen.dart';
 import 'package:hamro_sewa_frontend/features/provider/widgets/provider_app_bar.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
+import 'package:hamro_sewa_frontend/services/token_storage.dart';
 
 /// Provider Notifications: new bookings and updates (fetched from backend so provider sees new orders).
 class ProviderNotificationsScreen extends StatefulWidget {
   const ProviderNotificationsScreen({super.key});
 
   @override
-  State<ProviderNotificationsScreen> createState() => _ProviderNotificationsScreenState();
+  State<ProviderNotificationsScreen> createState() =>
+      _ProviderNotificationsScreenState();
 }
 
-class _ProviderNotificationsScreenState extends State<ProviderNotificationsScreen> {
+class _ProviderNotificationsScreenState
+    extends State<ProviderNotificationsScreen> {
   List<dynamic> _items = [];
   bool _loading = true;
 
@@ -27,32 +34,26 @@ class _ProviderNotificationsScreenState extends State<ProviderNotificationsScree
       final list = await ApiService.getProviderNotifications();
       if (mounted) {
         setState(() {
-        _items = list;
-        _loading = false;
-      });
+          _items = list;
+          _loading = false;
+        });
+        // Remember the latest notification so we can show "new" badges later.
+        final maxId = _items
+            .map((e) => (e as Map<String, dynamic>)['id'])
+            .map((v) => v is int ? v : int.tryParse(v?.toString() ?? '0'))
+            .whereType<int>()
+            .fold<int>(0, (prev, curr) => curr > prev ? curr : prev);
+        if (maxId > 0) {
+          await TokenStorage.setLastSeenNotificationId(maxId);
+        }
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-        _items = [];
-        _loading = false;
-      });
+          _items = [];
+          _loading = false;
+        });
       }
-    }
-  }
-
-  String _timeAgo(String? iso) {
-    if (iso == null || iso.isEmpty) return '';
-    try {
-      final d = DateTime.tryParse(iso);
-      if (d == null) return '';
-      final diff = DateTime.now().difference(d);
-      if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-      if (diff.inHours < 24) return '${diff.inHours} hours ago';
-      if (diff.inDays < 7) return '${diff.inDays} days ago';
-      return '${d.day}/${d.month}/${d.year}';
-    } catch (_) {
-      return '';
     }
   }
 
@@ -61,26 +62,36 @@ class _ProviderNotificationsScreenState extends State<ProviderNotificationsScree
     return Scaffold(
       backgroundColor: AppTheme.white,
       appBar: AppBar(
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
-        title: const Text('Notifications', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context)),
+        title: Text(AppStrings.t(context, 'notifications'),
+            style: const TextStyle(
+                color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.customerPrimary,
         foregroundColor: AppTheme.white,
         elevation: 0,
         shape: providerAppBarShape,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loading ? null : _load),
+          IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _loading ? null : _load),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.customerPrimary))
+          ? const Center(
+              child: AppShimmerLoader(color: AppTheme.customerPrimary))
           : _items.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.notifications_none, size: 64, color: Colors.grey[400]),
+                      Icon(Icons.notifications_none,
+                          size: 64, color: Colors.grey[400]),
                       const SizedBox(height: 16),
-                      Text('No notifications yet', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                      Text(AppStrings.t(context, 'noNotificationsYet'),
+                          style:
+                              TextStyle(fontSize: 16, color: Colors.grey[600])),
                     ],
                   ),
                 )
@@ -92,42 +103,68 @@ class _ProviderNotificationsScreenState extends State<ProviderNotificationsScree
                     itemCount: _items.length,
                     itemBuilder: (context, index) {
                       final n = _items[index] as Map<String, dynamic>;
-                      final title = n['title'] as String? ?? 'Notification';
-                      final body = n['body'] as String? ?? '';
-                      final time = _timeAgo(n['created_at']?.toString()) ?? n['created_at']?.toString() ?? '';
+                      final title = NotificationLocalizer.localizeTitle(
+                        context,
+                        n['title'] as String?,
+                      );
+                      final body = NotificationLocalizer.localizeBody(
+                        context,
+                        n['body'] as String?,
+                      );
+                      final time = NotificationLocalizer.timeAgo(
+                        context,
+                        n['created_at']?.toString(),
+                      );
+                      final bookingId = n['booking_id']?.toString();
                       return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey[300]!),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: CircleAvatar(
-                backgroundColor: AppTheme.customerPrimary.withOpacity(0.15),
-                child: const Icon(Icons.notifications_active, color: AppTheme.customerPrimary),
-              ),
-              title: Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  body,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16),
+                          leading: CircleAvatar(
+                            backgroundColor:
+                                AppTheme.customerPrimary.withOpacity(0.15),
+                            child: const Icon(Icons.notifications_active,
+                                color: AppTheme.customerPrimary),
+                          ),
+                          title: Text(
+                            title,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              body,
+                              style: TextStyle(
+                                  fontSize: 13, color: Colors.grey[700]),
+                            ),
+                          ),
+                          trailing: Text(
+                            time,
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[600]),
+                          ),
+                          onTap: () {
+                            if (bookingId != null &&
+                                bookingId != 'null' &&
+                                bookingId.isNotEmpty) {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => BookingDetailScreen(
+                                      bookingId: bookingId, isProvider: true),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              trailing: Text(
-                time,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-            ),
-          );
-        },
-      ),
-    ),
     );
   }
 }

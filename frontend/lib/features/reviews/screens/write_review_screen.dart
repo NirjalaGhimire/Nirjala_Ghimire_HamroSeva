@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 
 /// Write a review: Score (stars), Title, Review text, + add media, Option tags, *Username, *Email. Cancel / Post.
@@ -15,7 +16,15 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   final _reviewController = TextEditingController();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
-  final List<String> _optionTags = ['light', 'Fair', 'Medium', 'Dark', 'Dry', 'Oily', 'Combination'];
+  final List<String> _optionTags = [
+    'light',
+    'Fair',
+    'Medium',
+    'Dark',
+    'Dry',
+    'Oily',
+    'Combination'
+  ];
   String? _selectedOption;
 
   @override
@@ -32,23 +41,31 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     return Scaffold(
       backgroundColor: AppTheme.lightLavender,
       appBar: AppBar(
-        title: const Text('Write a review', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        title: Text(AppStrings.t(context, 'writeReview'),
+            style: const TextStyle(
+                color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.darkGrey,
         foregroundColor: AppTheme.white,
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: AppTheme.white)),
+          child: Text(AppStrings.t(context, 'cancel'),
+              style: const TextStyle(color: AppTheme.white)),
         ),
         actions: [
           TextButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Review posted (frontend only)')));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(AppStrings.t(context, 'reviewPosted'))));
               Navigator.pop(context);
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: AppTheme.darkGrey, borderRadius: BorderRadius.circular(8)),
-              child: const Text('Post', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.w600)),
+              decoration: BoxDecoration(
+                  color: AppTheme.darkGrey,
+                  borderRadius: BorderRadius.circular(8)),
+              child: Text(AppStrings.t(context, 'post'),
+                  style: const TextStyle(
+                      color: AppTheme.white, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -58,28 +75,34 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Score:', style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
+            Text(AppStrings.t(context, 'score'),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
             const SizedBox(height: 8),
             Row(
               children: List.generate(5, (i) {
                 return IconButton(
                   onPressed: () => setState(() => _stars = i + 1),
-                  icon: Icon(i < _stars ? Icons.star : Icons.star_border, color: Colors.amber, size: 36),
+                  icon: Icon(i < _stars ? Icons.star : Icons.star_border,
+                      color: Colors.amber, size: 36),
                 );
               }),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
+              decoration: InputDecoration(
+                labelText: AppStrings.t(context, 'title'),
                 filled: true,
                 fillColor: AppTheme.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12))),
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Review:', style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
+            Text(AppStrings.t(context, 'review'),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
             const SizedBox(height: 8),
             TextField(
               controller: _reviewController,
@@ -87,7 +110,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               decoration: const InputDecoration(
                 filled: true,
                 fillColor: AppTheme.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12))),
                 contentPadding: EdgeInsets.all(16),
               ),
             ),
@@ -95,7 +119,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
             OutlinedButton.icon(
               onPressed: () {},
               icon: const Icon(Icons.add),
-              label: const Text('Add photo/video'),
+              label: Text(AppStrings.t(context, 'addPhotoVideo')),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 48),
                 side: const BorderSide(color: AppTheme.darkGrey),
@@ -103,7 +127,9 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text('Option 1:', style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
+            Text('${AppStrings.t(context, 'option')} 1:',
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -113,7 +139,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                 return FilterChip(
                   label: Text(tag),
                   selected: selected,
-                  onSelected: (v) => setState(() => _selectedOption = v ? tag : null),
+                  onSelected: (v) =>
+                      setState(() => _selectedOption = v ? tag : null),
                   selectedColor: AppTheme.darkGrey.withOpacity(0.2),
                 );
               }).toList(),
@@ -121,21 +148,23 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
             const SizedBox(height: 20),
             TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: '*Username:',
+              decoration: InputDecoration(
+                labelText: '*${AppStrings.t(context, 'username')}:',
                 filled: true,
                 fillColor: AppTheme.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12))),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: '*Email:',
+              decoration: InputDecoration(
+                labelText: '*${AppStrings.t(context, 'email')}:',
                 filled: true,
                 fillColor: AppTheme.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12))),
               ),
             ),
           ],

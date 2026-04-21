@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 
 /// Payments: Active payment (PAY NOW), Remaining payments (collapsible), Cleared payments (collapsible), Payments summary.
@@ -18,7 +19,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     return Scaffold(
       backgroundColor: AppTheme.lightLavender,
       appBar: AppBar(
-        title: const Text('Payments', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        title: Text(AppStrings.t(context, 'payments'),
+            style: const TextStyle(
+                color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.darkGrey,
         foregroundColor: AppTheme.white,
       ),
@@ -27,98 +30,134 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _sectionTitle('Active payment'),
+            _sectionTitle(AppStrings.t(context, 'activePayment')),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppTheme.white,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6)],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.06), blurRadius: 6)
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Material payment', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.darkGrey)),
+                  Text(AppStrings.t(context, 'materialPayment'),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.darkGrey)),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Amount', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                        const Text('Rs. 1500', style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
-                      ]),
-                      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                        Text('Due Date', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                        const Text('10/10/2023', style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
-                      ]),
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(AppStrings.t(context, 'amount'),
+                                style: TextStyle(
+                                    fontSize: 12, color: Colors.grey[600])),
+                            const Text('Rs. 1500',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.darkGrey)),
+                          ]),
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(AppStrings.t(context, 'dueDate'),
+                                style: TextStyle(
+                                    fontSize: 12, color: Colors.grey[600])),
+                            const Text('10/10/2023',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.darkGrey)),
+                          ]),
                     ],
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pay now — coming soon'))),
-                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.darkGrey, foregroundColor: AppTheme.white),
-                      child: const Text('PAY NOW'),
+                      onPressed: () => ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(
+                              content: Text(
+                                  AppStrings.t(context, 'payNowComingSoon')))),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.darkGrey,
+                          foregroundColor: AppTheme.white),
+                      child: Text(AppStrings.t(context, 'payNowUpper')),
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
-            _sectionTitle('Remaining payments'),
+            _sectionTitle(AppStrings.t(context, 'remainingPayments')),
             const SizedBox(height: 8),
             _collapsibleCard(
               expanded: _remainingExpanded,
-              title: 'Payment Amount Rs. 4933',
-              onTap: () => setState(() => _remainingExpanded = !_remainingExpanded),
-              expandedChild: const Padding(
+              title: AppStrings.t(context, 'paymentAmountRs4933'),
+              onTap: () =>
+                  setState(() => _remainingExpanded = !_remainingExpanded),
+              expandedChild: Padding(
                 padding: EdgeInsets.only(top: 12),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: null,
-                    style: ButtonStyle(backgroundColor: WidgetStatePropertyAll(AppTheme.darkGrey)),
-                    child: Text('PAY NOW'),
+                    style: const ButtonStyle(
+                        backgroundColor:
+                            WidgetStatePropertyAll(AppTheme.darkGrey)),
+                    child: Text(AppStrings.t(context, 'payNowUpper')),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            _sectionTitle('Cleared payments'),
+            _sectionTitle(AppStrings.t(context, 'clearedPayments')),
             const SizedBox(height: 8),
             _collapsibleCard(
               expanded: _clearedExpanded,
-              title: 'Amount paid Rs. 4933',
-              leading: Icon(Icons.check_circle, color: Colors.green[700], size: 20),
+              title: AppStrings.t(context, 'amountPaidRs4933'),
+              leading:
+                  Icon(Icons.check_circle, color: Colors.green[700], size: 20),
               onTap: () => setState(() => _clearedExpanded = !_clearedExpanded),
               expandedChild: Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Clearance Date', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-                    const Text('10/10/2023', style: TextStyle(color: AppTheme.darkGrey)),
+                    Text(AppStrings.t(context, 'clearanceDate'),
+                        style:
+                            TextStyle(fontSize: 13, color: Colors.grey[600])),
+                    const Text('10/10/2023',
+                        style: TextStyle(color: AppTheme.darkGrey)),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 24),
-            _sectionTitle('Payments summary'),
+            _sectionTitle(AppStrings.t(context, 'paymentsSummary')),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppTheme.white,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6)],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.06), blurRadius: 6)
+                ],
               ),
               child: Column(
                 children: [
-                  _summaryRow('Total Amount', 'Rs.3000'),
-                  _summaryRow('Amount paid', 'Rs.1500'),
-                  _summaryRow('Remaining Amount', 'Rs.1500'),
+                  _summaryRow(AppStrings.t(context, 'totalAmount'), 'Rs.3000'),
+                  _summaryRow(AppStrings.t(context, 'amountPaid'), 'Rs.1500'),
+                  _summaryRow(
+                      AppStrings.t(context, 'remainingAmount'), 'Rs.1500'),
                 ],
               ),
             ),
@@ -131,7 +170,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   Widget _sectionTitle(String text) {
     return Text(
       text,
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey),
+      style: const TextStyle(
+          fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.darkGrey),
     );
   }
 
@@ -147,7 +187,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6)
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,8 +199,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             child: Row(
               children: [
                 if (leading != null) ...[leading, const SizedBox(width: 8)],
-                Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, color: AppTheme.darkGrey))),
-                Icon(expanded ? Icons.expand_less : Icons.expand_more, color: AppTheme.darkGrey),
+                Expanded(
+                    child: Text(title,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.darkGrey))),
+                Icon(expanded ? Icons.expand_less : Icons.expand_more,
+                    color: AppTheme.darkGrey),
               ],
             ),
           ),
@@ -175,7 +222,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: AppTheme.darkGrey)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
+          Text(value,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w600, color: AppTheme.darkGrey)),
         ],
       ),
     );

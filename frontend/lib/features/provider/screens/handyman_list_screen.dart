@@ -20,8 +20,12 @@ class HandymanListScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
-        title: const Text('Handyman List', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context)),
+        title: const Text('Handyman List',
+            style:
+                TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.customerPrimary,
         foregroundColor: AppTheme.white,
         elevation: 0,
@@ -55,10 +59,14 @@ class HandymanListScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundColor: AppTheme.customerPrimary.withOpacity(0.15),
+                      backgroundColor:
+                          AppTheme.customerPrimary.withOpacity(0.15),
                       child: Text(
                         (h['name'] ?? 'H')[0].toUpperCase(),
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.customerPrimary),
+                        style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.customerPrimary),
                       ),
                     ),
                     Positioned(
@@ -69,7 +77,8 @@ class HandymanListScreen extends StatelessWidget {
                           color: Colors.green,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.power, color: AppTheme.white, size: 12),
+                        child: const Icon(Icons.power,
+                            color: AppTheme.white, size: 12),
                       ),
                     ),
                   ],
@@ -81,7 +90,8 @@ class HandymanListScreen extends StatelessWidget {
                     Container(
                       width: 6,
                       height: 6,
-                      decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                      decoration: const BoxDecoration(
+                          color: Colors.green, shape: BoxShape.circle),
                     ),
                     const SizedBox(width: 6),
                     Text(

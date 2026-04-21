@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
+import 'package:hamro_sewa_frontend/services/api_service.dart';
 
 /// Change Password: form for current password, new password, confirm. Opens as separate page from Settings.
 class ChangePasswordScreen extends StatefulWidget {
@@ -32,24 +35,43 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final confirm = _confirmController.text;
 
     if (current.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter your current password')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppStrings.t(context, 'enterCurrentPassword'))));
       return;
     }
     if (newPw.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('New password must be at least 6 characters')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppStrings.t(context, 'newPasswordAtLeast6'))));
       return;
     }
     if (newPw != confirm) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('New password and confirm do not match')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppStrings.t(context, 'newPasswordConfirmMismatch'))));
       return;
     }
 
     setState(() => _isLoading = true);
-    // TODO: call backend change-password API when available
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Change password — coming soon. Backend API will be connected.')));
+    try {
+      final result = await ApiService.changePassword(
+        currentPassword: current,
+        newPassword: newPw,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(result['message'] ??
+                  AppStrings.t(context, 'passwordChangedSuccessfully'))),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -58,8 +80,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     return Scaffold(
       backgroundColor: AppTheme.white,
       appBar: AppBar(
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
-        title: const Text('Change Password', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context)),
+        title: Text(AppStrings.t(context, 'changePassword'),
+            style: const TextStyle(
+                color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.darkGrey,
         foregroundColor: AppTheme.white,
       ),
@@ -69,7 +95,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Choose a strong password and do not share it with anyone.',
+              AppStrings.t(context, 'chooseStrongPasswordHint'),
               style: TextStyle(fontSize: 14, color: Colors.grey[700]),
             ),
             const SizedBox(height: 24),
@@ -77,13 +103,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               controller: _currentController,
               obscureText: _obscureCurrent,
               decoration: InputDecoration(
-                labelText: 'Current password',
+                labelText: AppStrings.t(context, 'currentPassword'),
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureCurrent ? Icons.visibility_off : Icons.visibility),
-                  onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
+                  icon: Icon(_obscureCurrent
+                      ? Icons.visibility_off
+                      : Icons.visibility),
+                  onPressed: () =>
+                      setState(() => _obscureCurrent = !_obscureCurrent),
                 ),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 16),
@@ -91,13 +121,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               controller: _newController,
               obscureText: _obscureNew,
               decoration: InputDecoration(
-                labelText: 'New password',
+                labelText: AppStrings.t(context, 'newPassword'),
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureNew ? Icons.visibility_off : Icons.visibility),
+                  icon: Icon(
+                      _obscureNew ? Icons.visibility_off : Icons.visibility),
                   onPressed: () => setState(() => _obscureNew = !_obscureNew),
                 ),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 16),
@@ -105,13 +137,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               controller: _confirmController,
               obscureText: _obscureConfirm,
               decoration: InputDecoration(
-                labelText: 'Confirm new password',
+                labelText: AppStrings.t(context, 'confirmNewPassword'),
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility),
-                  onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  icon: Icon(_obscureConfirm
+                      ? Icons.visibility_off
+                      : Icons.visibility),
+                  onPressed: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
                 ),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 28),
@@ -123,11 +159,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   backgroundColor: AppTheme.darkGrey,
                   foregroundColor: AppTheme.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 child: _isLoading
-                    ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Update password'),
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: AppShimmerLoader(
+                            strokeWidth: 2, color: Colors.white))
+                    : Text(AppStrings.t(context, 'updatePasswordButton')),
               ),
             ),
           ],

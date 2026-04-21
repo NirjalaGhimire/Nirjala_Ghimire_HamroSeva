@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
 import 'package:hamro_sewa_frontend/services/token_storage.dart';
@@ -15,6 +16,20 @@ class _ProviderServicesScreenState extends State<ProviderServicesScreen> {
   List<dynamic> _services = [];
   bool _loading = true;
   String? _error;
+
+  String _statusLabel(String? rawStatus) {
+    final status = (rawStatus ?? '').trim().toLowerCase();
+    switch (status) {
+      case 'active':
+        return 'Available';
+      case 'inactive':
+        return 'Temporarily unavailable';
+      case 'paused':
+        return 'Paused';
+      default:
+        return 'Status not set';
+    }
+  }
 
   @override
   void initState() {
@@ -77,7 +92,7 @@ class _ProviderServicesScreenState extends State<ProviderServicesScreen> {
         foregroundColor: AppTheme.white,
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.customerPrimary))
+          ? const AppPageShimmer()
           : _error != null
               ? Center(
                   child: Padding(
@@ -113,12 +128,45 @@ class _ProviderServicesScreenState extends State<ProviderServicesScreen> {
                         itemBuilder: (context, index) {
                           final s = _services[index] as Map<String, dynamic>;
                           final title = s['title'] as String? ?? 'Service';
-                          final price = s['price'] != null ? 'Rs ${s['price']}' : '';
+                          final description =
+                              (s['description'] as String? ?? '').trim();
+                          final statusLabel =
+                              _statusLabel(s['status'] as String?);
                           return Card(
-                            margin: const EdgeInsets.only(bottom: 8),
+                            margin: const EdgeInsets.only(bottom: 10),
                             child: ListTile(
                               title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                              subtitle: Text(price),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Quotation based',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.customerPrimary,
+                                    ),
+                                  ),
+                                  if (description.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      description,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(color: Colors.grey[700]),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    statusLabel,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
 import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
+import 'package:hamro_sewa_frontend/features/admin/screens/admin_shell_screen.dart';
 import 'package:hamro_sewa_frontend/features/auth/screens/login_prototype_screen.dart';
 import 'package:hamro_sewa_frontend/features/customer/screens/customer_shell_screen.dart';
-import 'package:hamro_sewa_frontend/features/dashboard/screens/dashboard_screen.dart';
 import 'package:hamro_sewa_frontend/features/onboarding/screens/onboarding_screen.dart';
 import 'package:hamro_sewa_frontend/features/provider/screens/provider_shell_screen.dart';
 import 'package:hamro_sewa_frontend/services/token_storage.dart';
@@ -37,9 +38,10 @@ class _SplashDeciderState extends State<SplashDecider> {
     } else if (token != null && token.isNotEmpty) {
       final user = await TokenStorage.getSavedUser();
       final role = (user?['role'] ?? 'customer').toString().toLowerCase();
-      if (role == 'admin') {
-        target = const DashboardScreen();
-      } else if (role == 'provider') {
+      // Route based on role: admin → AdminShellScreen, provider → ProviderShellScreen, else → CustomerShellScreen
+      if (role == 'admin' || role == 'admin_user') {
+        target = const AdminShellScreen();
+      } else if (role == 'provider' || role == 'prov') {
         target = const ProviderShellScreen();
       } else {
         target = const CustomerShellScreen();
@@ -84,7 +86,7 @@ class _SplashDeciderState extends State<SplashDecider> {
               ),
             ),
             const SizedBox(height: 40),
-            const CircularProgressIndicator(
+            const AppShimmerLoader(
               valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
             ),
           ],

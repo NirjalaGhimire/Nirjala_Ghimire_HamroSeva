@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/features/orders/screens/select_provider_screen.dart';
 
@@ -17,10 +18,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   static const List<Map<String, dynamic>> _categories = [
     {'id': 'cleaning', 'title': 'Cleaning', 'icon': Icons.cleaning_services},
     {'id': 'repairing', 'title': 'Repairing', 'icon': Icons.build},
-    {'id': 'electrician', 'title': 'Electrician', 'icon': Icons.electrical_services},
+    {
+      'id': 'electrician',
+      'title': 'Electrician',
+      'icon': Icons.electrical_services
+    },
     {'id': 'carpenter', 'title': 'Carpenter', 'icon': Icons.carpenter},
     {'id': 'plumber', 'title': 'Plumber', 'icon': Icons.plumbing},
-    {'id': 'beautician', 'title': 'Beautician', 'icon': Icons.face_retouching_natural},
+    {
+      'id': 'beautician',
+      'title': 'Beautician',
+      'icon': Icons.face_retouching_natural
+    },
     {'id': 'driver', 'title': 'Driver', 'icon': Icons.directions_car},
     {'id': 'tutor', 'title': 'Tutor', 'icon': Icons.school},
     {'id': 'photographer', 'title': 'Photographer', 'icon': Icons.camera_alt},
@@ -31,7 +40,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     return Scaffold(
       backgroundColor: AppTheme.lightLavender,
       appBar: AppBar(
-        title: const Text('Categories', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        title: Text(AppStrings.t(context, 'categoriesTab'),
+            style: const TextStyle(
+                color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.darkGrey,
         foregroundColor: AppTheme.white,
       ),
@@ -70,16 +81,25 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     color: selected ? Colors.blue : Colors.transparent,
                     width: 3,
                   ),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6, offset: const Offset(0, 2))],
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2))
+                  ],
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(cat['icon'] as IconData, size: 40, color: AppTheme.darkGrey),
+                    Icon(cat['icon'] as IconData,
+                        size: 40, color: AppTheme.darkGrey),
                     const SizedBox(height: 8),
                     Text(
                       cat['title'] as String,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.darkGrey),
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.darkGrey),
                       textAlign: TextAlign.center,
                     ),
                   ],
