@@ -1,0 +1,67 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+  <h1>Pending Provider Applications</h1>
+  <p>Review uploaded documents first, then approve or reject.</p>
+  <p><a href="{% url 'admin:authentication_user_changelist' %}">Back to users</a></p>
+  {% if rows %}
+    <table class="adminlist" style="width:100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:8px;">Provider</th>
+          <th style="text-align:left; padding:8px;">Submitted</th>
+          <th style="text-align:left; padding:8px;">Documents</th>
+          <th style="text-align:left; padding:8px;">Decision</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in rows %}
+          <tr>
+            <td style="vertical-align:top; padding:8px;">
+              <strong>{{ item.provider.username|default:"-" }}</strong><br>
+              {{ item.provider.email|default:"-" }}<br>
+              {{ item.provider.phone|default:"-" }}<br>
+              Profession: {{ item.provider.profession|default:"-" }}
+            </td>
+            <td style="vertical-align:top; padding:8px;">
+              {{ item.provider.submitted_at|default:"-" }}
+            </td>
+            <td style="vertical-align:top; padding:8px;">
+              {% if item.documents %}
+                {% for doc in item.documents %}
+                  <div style="margin-bottom:6px;">
+                    <strong>{{ doc.document_type|default:"document" }}</strong>
+                    {% if doc.document_number %}(#{{ doc.document_number }}){% endif %}
+                    {% if doc.document_url %}
+                      - <a href="{{ doc.document_url }}" target="_blank" rel="noopener">Open</a>
+                    {% else %}
+                      - <span>No file URL</span>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              {% else %}
+                <span>No documents found</span>
+              {% endif %}
+            </td>
+            <td style="vertical-align:top; padding:8px; min-width: 280px;">
+              <form method="post" action="{% url 'admin:authentication_user_provider_review_action' item.provider.id 'approved' %}" style="display:inline-block; margin-right:8px;">
+                {% csrf_token %}
+                <button type="submit" class="button default">Approve</button>
+              </form>
+              <form method="post" action="{% url 'admin:authentication_user_provider_review_action' item.provider.id 'rejected' %}" style="margin-top:8px;">
+                {% csrf_token %}
+                <input type="text" name="reason" placeholder="Rejection reason (required)" style="width: 100%; max-width: 250px; margin-bottom: 6px;" required />
+                <br>
+                <button type="submit" class="button deletelink">Reject</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No pending provider applications right now.</p>
+  {% endif %}
+</div>
+{% endblock %}

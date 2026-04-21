@@ -1,0 +1,1496 @@
+/*
+ * Hamro Sewa — premium dark admin shell (sidebar + top bar + glass cards)
+ * Overrides Django admin + nav_sidebar for #nav-sidebar living inside .hs-sidebar.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+html[data-theme="dark"],
+html:not([data-theme="light"]) {
+  --body-bg: #0c0c0e;
+  --body-fg: #e4e4e7;
+  --body-quiet-color: #a1a1aa;
+  --hairline-color: rgba(255, 255, 255, 0.08);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --darkened-bg: rgba(255, 255, 255, 0.04);
+  --selected-bg: rgba(34, 197, 94, 0.12);
+  --selected-row: rgba(34, 197, 94, 0.1);
+  --link-fg: #4ade80;
+  --link-hover-color: #86efac;
+  --header-color: #fafafa;
+  --breadcrumbs-link-fg: #4ade80;
+  --breadcrumbs-bg: transparent;
+  --primary: #22c55e;
+  --secondary: #3b82f6;
+  --button-bg: linear-gradient(135deg, #16a34a, #15803d);
+  --close-button-bg: rgba(255, 255, 255, 0.06);
+  --delete-button-bg: #b91c1c;
+}
+
+body.hs-admin-shell {
+  --hs-pad-x: 1.25rem;
+  --hs-pad-y: 1rem;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background: #09090b !important;
+  color: #e4e4e7 !important;
+  margin: 0;
+}
+
+body.hs-admin-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 0% -10%, rgba(34, 197, 94, 0.07), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 100% 0%, rgba(139, 92, 246, 0.06), transparent 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ——— Shell layout ———
+   Django #container defaults to flex-direction: COLUMN and #container > .main grows.
+   Our shell uses sidebar + .hs-main-column as direct children, so we must use ROW
+   and flex the main column — otherwise the UI stacks vertically and looks “broken”. */
+.hs-admin-shell #container.hs-container {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  min-height: 100vh !important;
+  height: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.hs-container {
+  position: relative;
+  z-index: 1;
+}
+
+.hs-sidebar {
+  width: 272px;
+  flex: 0 0 272px;
+  background: rgba(16, 16, 18, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-height: none;
+  position: sticky;
+  top: 0;
+  align-self: stretch;
+  overflow: hidden;
+}
+
+.hs-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.15rem 1.1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hs-logo-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #22c55e, #15803d);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 0 24px rgba(34, 197, 94, 0.35);
+}
+
+.hs-logo-text a {
+  color: #fafafa !important;
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.hs-logo-text span {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #71717a;
+  margin-top: 0.15rem;
+}
+
+/* Kill Django nav_sidebar off-canvas positioning — #nav-sidebar is inside aside */
+.hs-admin-shell #nav-sidebar {
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  visibility: visible !important;
+  border: none !important;
+  background: transparent !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  max-height: none !important;
+  z-index: 1 !important;
+  /* Extra right inset so action links stay inside .hs-sidebar (overflow:hidden) */
+  padding: 0.5rem 0.9rem 1.25rem 0.65rem;
+}
+
+.hs-admin-shell .hs-nav-sidebar-inner.sticky {
+  position: static !important;
+  max-height: none !important;
+  top: auto !important;
+}
+
+.hs-nav-toggle-hidden {
+  display: none !important;
+}
+
+.hs-nav-filter {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0.75rem;
+  padding: 0.55rem 0.75rem !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #fafafa !important;
+  font-size: 0.8rem !important;
+}
+
+.hs-nav-filter:focus {
+  outline: none;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+}
+
+/* Sidebar app list → card sections */
+#nav-sidebar .module {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  margin-bottom: 0.65rem;
+  overflow-x: visible;
+  overflow-y: hidden;
+}
+
+#nav-sidebar .module table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+#nav-sidebar .module caption {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+  padding: 0.55rem 0.85rem !important;
+  text-align: left;
+}
+
+#nav-sidebar .module caption a.section {
+  color: #fafafa !important;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+
+#nav-sidebar .module tr {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+#nav-sidebar .module th {
+  padding: 0.5rem 0.35rem 0.5rem 0.75rem !important;
+  font-weight: 500;
+  width: 62%;
+  max-width: 0; /* lets ellipsis work in fixed-layout table */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+#nav-sidebar .module th a {
+  color: #d4d4d8 !important;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+#nav-sidebar .module th a:hover {
+  color: #fff !important;
+}
+
+#nav-sidebar .module td {
+  padding: 0.5rem 0.75rem 0.5rem 0.25rem !important;
+  width: 38%;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+#nav-sidebar .module td .changelink {
+  margin-inline-start: 0.45rem;
+}
+
+#nav-sidebar .current-model {
+  background: rgba(34, 197, 94, 0.12) !important;
+}
+
+#nav-sidebar .current-model th a {
+  color: #4ade80 !important;
+  font-weight: 600;
+}
+
+/* Main column: fills remaining width next to sidebar */
+.hs-main-column {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #09090b;
+  min-height: 100vh;
+}
+
+/* Slim top bar — do not let flex layout stretch header vertically */
+.hs-top-header#header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  flex: 0 0 auto !important;
+  align-self: stretch;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem 1rem !important;
+  padding: 0.55rem var(--hs-pad-x, 1.25rem) !important;
+  background: rgba(9, 9, 11, 0.92) !important;
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: none !important;
+}
+
+#branding.hs-header-branding h1,
+#branding.hs-header-branding {
+  margin: 0;
+  padding: 0;
+}
+
+#branding h1#site-name,
+#branding .hs-header-site-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+#branding h1#site-name a,
+#branding .hs-header-site-name a {
+  color: #a1a1aa !important;
+  text-decoration: none;
+}
+
+#branding h1#site-name a:hover,
+#branding .hs-header-site-name a:hover {
+  color: #fafafa !important;
+}
+
+#user-tools.hs-user-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  color: #a1a1aa !important;
+}
+
+#user-tools a {
+  color: #d4d4d8 !important;
+  text-decoration: none;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+#user-tools a:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff !important;
+}
+
+.hs-welcome {
+  color: #71717a;
+  margin-right: 0.25rem;
+}
+
+#user-tools strong {
+  color: #fafafa;
+  font-weight: 600;
+}
+
+.hs-logout-btn {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #fca5a5 !important;
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  border-radius: 8px !important;
+  padding: 0.35rem 0.75rem !important;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.hs-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+}
+
+#logout-form {
+  display: inline;
+}
+
+/* Breadcrumbs */
+.hs-breadcrumb-wrap {
+  flex: 0 0 auto;
+  padding: 0.65rem 1.25rem 0;
+}
+
+.hs-breadcrumbs.breadcrumbs {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 0.5rem 1rem !important;
+  margin: 0 0 0.75rem 0 !important;
+  font-size: 0.8rem;
+}
+
+.hs-breadcrumbs a {
+  color: #4ade80 !important;
+  font-weight: 500;
+}
+
+/* Main scroll area: flex so content fills height; enable horizontal scroll for wide tables */
+.hs-admin-shell .main.hs-main {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.hs-admin-shell .main.shifted {
+  margin: 0 !important;
+}
+
+.hs-admin-shell .main .content,
+.hs-admin-shell .main.shifted .content {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  /* Padding only on inner #content — avoids double inset vs breadcrumbs */
+  padding: 0 !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hs-content {
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Single horizontal rhythm: breadcrumbs, header, and page body share --hs-pad-x */
+.hs-breadcrumb-wrap {
+  padding-left: var(--hs-pad-x) !important;
+  padding-right: var(--hs-pad-x) !important;
+}
+
+body.hs-admin-shell #content.hs-content-inner {
+  padding: var(--hs-pad-y) var(--hs-pad-x) 2rem !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: visible !important;
+}
+
+/* Changelist: toolbar row (title + actions), then table */
+body.hs-admin-shell.change-list #content.hs-content-inner {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+  float: none !important;
+}
+
+body.hs-admin-shell.change-list #content.hs-content-inner > #content-main.hs-changelist-wrap {
+  float: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+  min-width: 0 !important;
+}
+
+.hs-changelist-toolbar {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.75rem 1rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.hs-changelist-title {
+  flex: 1 1 200px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 1.2rem !important;
+  line-height: 1.3 !important;
+  font-weight: 700 !important;
+  color: #fafafa !important;
+}
+
+.hs-changelist-tools {
+  flex: 0 1 auto !important;
+}
+
+body.hs-admin-shell.change-list .object-tools {
+  float: none !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
+  max-width: 100% !important;
+  list-style: none !important;
+}
+
+body.hs-admin-shell.change-list .object-tools li {
+  float: none !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.hs-content-inner {
+  background: transparent;
+}
+
+/* Django pins .dashboard #content to 600px — undo for our full-width analytics home */
+body.hs-admin-shell.dashboard #content.hs-content-inner {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Default .main .content uses overflow-x:hidden; dashboard module tables need visible overflow */
+body.hs-admin-shell.dashboard .main .content {
+  overflow-x: visible !important;
+}
+
+.hs-page-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #fafafa;
+  margin: 0 0 1rem;
+}
+
+/* ——— Dashboard home ——— */
+.hs-dashboard-root {
+  max-width: 1400px;
+}
+
+.hs-dash-header {
+  margin-bottom: 1.35rem;
+}
+
+.hs-dash-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin: 0 0 0.35rem;
+  color: #fafafa;
+}
+
+.hs-dash-lead {
+  margin: 0;
+  color: #71717a;
+  font-size: 0.9rem;
+}
+
+.hs-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.hs-stat-card {
+  position: relative;
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(24, 24, 27, 0.65);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+}
+
+.hs-stat-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  transform: translateY(-2px);
+}
+
+.hs-stat-card::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -25%;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  filter: blur(36px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.hs-stat-green::before {
+  background: #22c55e;
+}
+.hs-stat-blue::before {
+  background: #3b82f6;
+}
+.hs-stat-amber::before {
+  background: #eab308;
+}
+.hs-stat-violet::before {
+  background: #a855f7;
+}
+.hs-stat-rose::before {
+  background: #f43f5e;
+}
+.hs-stat-orange::before {
+  background: #f97316;
+}
+
+.hs-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.65rem;
+}
+
+.hs-stat-green .hs-stat-icon {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+}
+.hs-stat-blue .hs-stat-icon {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+.hs-stat-amber .hs-stat-icon {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+}
+.hs-stat-violet .hs-stat-icon {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+.hs-stat-rose .hs-stat-icon {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fb7185;
+}
+.hs-stat-orange .hs-stat-icon {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+}
+
+.hs-stat-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #71717a;
+  margin-bottom: 0.2rem;
+}
+
+.hs-stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fafafa;
+}
+
+.hs-charts-row,
+.hs-bottom-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 1100px) {
+  .hs-charts-row,
+  .hs-bottom-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hs-chart-card {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(24, 24, 27, 0.55);
+  backdrop-filter: blur(16px);
+  padding: 1.15rem 1.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.hs-chart-card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.hs-chart-head h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.hs-chart-head p {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  color: #71717a;
+}
+
+.hs-chart-canvas-wrap {
+  position: relative;
+  height: 240px;
+}
+
+.hs-donut-wrap {
+  height: 220px;
+}
+
+.hs-recent-card {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(24, 24, 27, 0.55);
+  padding: 1.15rem 1.25rem;
+}
+
+.hs-recent-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.hs-recent-sub {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #71717a;
+  margin: 0 0 0.75rem;
+}
+
+.hs-action-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.hs-action-list li {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.82rem;
+}
+
+.hs-action-list a {
+  color: #4ade80 !important;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.hs-action-list a:hover {
+  text-decoration: underline;
+}
+
+.hs-action-meta {
+  display: block;
+  font-size: 0.7rem;
+  color: #71717a;
+  margin-top: 0.15rem;
+}
+
+.hs-quiet {
+  color: #71717a;
+  font-size: 0.85rem;
+}
+
+.hs-quick-models {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  padding-inline: 0.5rem;
+  padding-bottom: 0.5rem;
+  box-sizing: border-box;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hs-quick-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+  color: #fafafa;
+}
+
+.hs-quick-hint {
+  font-size: 0.8rem;
+  color: #71717a;
+  margin: 0 0 1rem;
+}
+
+.hs-quick-models .module {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(24, 24, 27, 0.45);
+  overflow: visible;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.hs-quick-models .module table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  /* auto: action column sizes to content; fixed + 1% td was too narrow → Add/Change overlapped */
+  table-layout: auto;
+}
+
+.hs-quick-models .module tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.hs-quick-models .module th,
+.hs-quick-models .module td {
+  padding: 0.55rem 1rem;
+  vertical-align: middle;
+}
+
+/* Model name: remaining width; actions column stays narrow and right-aligned */
+.hs-quick-models .module tbody th {
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: auto;
+}
+
+/* Must stay table-cell: display:flex on <td> breaks table layout and stacks Add / Change vertically */
+.hs-quick-models .module tbody td {
+  display: table-cell;
+  text-align: right;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 1%;
+  min-width: 14rem;
+  padding-left: 0.75rem;
+  padding-right: clamp(1.5rem, 5vw, 2.75rem);
+  box-sizing: border-box;
+  line-height: 1.35;
+}
+
+.hs-quick-models .module tbody td .addlink,
+.hs-quick-models .module tbody td .changelink {
+  display: inline !important;
+  vertical-align: middle;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.hs-quick-models .module tbody td .addlink {
+  margin-inline-end: 1rem;
+  margin-inline-start: 0;
+}
+
+.hs-quick-models .module tbody td .changelink {
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+}
+
+.hs-quick-models .module th a {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Long SERVICES app: extra breathing room between rows */
+.hs-quick-models .app-services.module tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Django app_list uses <table><caption><a class="section">, not h2 */
+.hs-quick-models .module caption {
+  caption-side: top;
+  text-align: left;
+  padding: 0;
+  margin: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(59, 130, 246, 0.12));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.hs-quick-models .module caption a.section {
+  display: block;
+  color: #fafafa !important;
+  padding: 0.65rem 1rem !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Services app — brown module header (app_label is "services") */
+.hs-quick-models .app-services.module caption {
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.65), rgba(69, 26, 3, 0.75)) !important;
+  border-bottom: 1px solid rgba(180, 83, 9, 0.45);
+}
+.hs-quick-models .app-services.module caption a.section {
+  color: #fef3c7 !important;
+}
+
+/* ——— Changelist / forms (inner pages) ——— */
+/* Do NOT use overflow:hidden on #changelist — it clips wide tables. Scroll inside .results */
+#changelist {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 1rem !important;
+  flex-wrap: nowrap !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: rgba(24, 24, 27, 0.4) !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0.75rem !important;
+}
+
+#changelist .changelist-form-container {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+#changelist .results {
+  background: rgba(12, 12, 14, 0.5);
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+#changelist-form .results {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+}
+
+#changelist table {
+  color: #e4e4e7;
+}
+
+#result_list thead th {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #a1a1aa !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+#changelist tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+#changelist tbody tr:hover {
+  background: rgba(34, 197, 94, 0.06) !important;
+}
+
+#changelist-filter {
+  flex: 0 0 220px !important;
+  max-width: 260px !important;
+  margin: 0 !important;
+  align-self: flex-start !important;
+  position: sticky !important;
+  top: 0.5rem !important;
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: auto !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: rgba(24, 24, 27, 0.55) !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 900px) {
+  #changelist {
+    flex-direction: column !important;
+  }
+  #changelist-filter {
+    flex: 1 1 auto !important;
+    max-width: none !important;
+    width: 100% !important;
+    position: relative !important;
+    top: auto !important;
+    max-height: none !important;
+  }
+}
+
+#changelist-filter h2 {
+  background: rgba(34, 197, 94, 0.12) !important;
+  color: #fafafa !important;
+}
+
+.submit-row,
+.form-row input,
+.form-row select,
+.form-row textarea {
+  border-radius: 10px !important;
+}
+
+.module {
+  border-radius: 12px;
+}
+
+.messagelist li {
+  border-radius: 10px;
+  border: none !important;
+}
+
+/* Object tools */
+.object-tools a {
+  border-radius: 8px !important;
+  background: rgba(34, 197, 94, 0.2) !important;
+  color: #86efac !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
+}
+
+.object-tools a:hover {
+  background: rgba(34, 197, 94, 0.3) !important;
+}
+
+.addlink,
+.button,
+input[type="submit"],
+button[type="submit"] {
+  border-radius: 10px !important;
+}
+
+/* ——— Login ——— */
+body.hs-admin-shell.login {
+  background: #09090b !important;
+}
+
+body.hs-admin-shell.login .hs-sidebar {
+  display: none !important;
+}
+
+body.hs-admin-shell.login .hs-main-column {
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 100vh;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+body.hs-admin-shell.login .hs-top-header#header {
+  justify-content: center;
+  border: none;
+  background: transparent !important;
+}
+
+body.hs-admin-shell.login #user-tools {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+body.hs-admin-shell.login .hs-breadcrumb-wrap {
+  display: none;
+}
+
+body.hs-admin-shell.login #content-main {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(24, 24, 27, 0.7);
+  backdrop-filter: blur(16px);
+  padding: 1.5rem !important;
+}
+
+/* Footer */
+.hs-footer#footer {
+  flex: 0 0 auto !important;
+  padding: 0.75rem 1.25rem;
+  color: #52525b;
+  font-size: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  margin-top: auto;
+}
+
+/* Theme toggle visibility */
+#header button.theme-toggle,
+.theme-toggle {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Sidebar: Dashboard entry */
+.hs-nav-dashboard-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.6rem !important;
+  margin: 0 0.65rem 0.75rem !important;
+  padding: 0.65rem 0.85rem !important;
+  border-radius: 10px !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  color: #d4d4d8 !important;
+  text-decoration: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  transition: background 0.2s, border-color 0.2s, color 0.2s !important;
+}
+
+.hs-nav-dashboard-link:hover {
+  color: #fff !important;
+  border-color: rgba(34, 197, 94, 0.35) !important;
+  background: rgba(34, 197, 94, 0.1) !important;
+}
+
+.hs-nav-dashboard-link.is-active {
+  color: #4ade80 !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+  background: rgba(34, 197, 94, 0.14) !important;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.12) !important;
+}
+
+.hs-nav-dashboard-icon {
+  display: flex;
+  color: inherit;
+}
+
+/* ——— Dashboard v2 (analytics home) ——— */
+.hs-dash-v2.hs-dashboard-root {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.hs-dash-hero {
+  margin-bottom: 1.25rem;
+}
+
+.hs-dash-top-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(260px, 300px);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+  .hs-dash-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hs-mini-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .hs-mini-metric-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.hs-mini-card {
+  position: relative;
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(24, 24, 27, 0.72);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.25s;
+}
+
+.hs-mini-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+}
+
+.hs-mini-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -30% -40% auto;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.hs-glow-green::after {
+  background: #22c55e;
+}
+.hs-glow-blue::after {
+  background: #3b82f6;
+}
+.hs-glow-amber::after {
+  background: #eab308;
+}
+.hs-glow-violet::after {
+  background: #a855f7;
+}
+.hs-glow-rose::after {
+  background: #f43f5e;
+}
+.hs-glow-orange::after {
+  background: #f97316;
+}
+
+.hs-mini-pill {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+}
+
+.hs-pill-up {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.15);
+}
+.hs-pill-warn {
+  color: #fbbf24;
+  background: rgba(234, 179, 8, 0.15);
+}
+.hs-pill-muted {
+  color: #71717a;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.hs-mini-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: #a1a1aa;
+}
+
+.hs-mini-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #71717a;
+}
+
+.hs-mini-value {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fafafa;
+  line-height: 1.2;
+  margin-top: 0.15rem;
+}
+
+.hs-mini-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: #52525b;
+  margin-top: 0.2rem;
+}
+
+.hs-dash-wide-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 520px) {
+  .hs-dash-wide-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hs-wide-stat {
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(24, 24, 27, 0.65);
+  position: relative;
+  overflow: hidden;
+}
+
+.hs-wide-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fafafa;
+  letter-spacing: -0.03em;
+}
+
+.hs-slash {
+  opacity: 0.35;
+  font-weight: 400;
+  margin: 0 0.15rem;
+}
+
+.hs-gauge-card {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(22, 22, 26, 0.85);
+  backdrop-filter: blur(18px);
+  padding: 1.1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.hs-gauge-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fafafa;
+  width: 100%;
+  text-align: left;
+}
+
+.hs-gauge-sub {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  color: #71717a;
+  width: 100%;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.hs-gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 200px;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #71717a;
+  margin-bottom: 0.35rem;
+}
+
+.hs-gauge-svg-wrap {
+  position: relative;
+  width: 200px;
+  height: 118px;
+}
+
+.hs-gauge-svg {
+  width: 200px;
+  height: 118px;
+}
+
+.hs-gauge-center {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(180deg, #fff, #a1a1aa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hs-gauge-status {
+  margin: 0.65rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #86efac;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  line-height: 1.35;
+}
+
+.hs-dash-mid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+  .hs-dash-mid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hs-chart-wide .hs-chart-tall {
+  height: 280px;
+}
+
+.hs-progress-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hs-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.hs-progress-row .hs-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #a1a1aa;
+  margin-bottom: 0.35rem;
+}
+
+.hs-progress-row .hs-progress-meta strong {
+  color: #fafafa;
+  font-weight: 600;
+}
+
+.hs-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.hs-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.8s ease-out;
+}
+
+.hs-pf1 {
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
+}
+.hs-pf2 {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+}
+.hs-pf3 {
+  background: linear-gradient(90deg, #eab308, #facc15);
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.3);
+}
+
+.hs-cap-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.75rem;
+  color: #71717a;
+}
+
+.hs-cap-badge {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.hs-dash-bottom {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .hs-dash-bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hs-donut-card .hs-donut-wrap {
+  height: 200px;
+}
+
+@media (max-width: 900px) {
+  .hs-admin-shell #container.hs-container {
+    flex-direction: column !important;
+  }
+  .hs-sidebar {
+    width: 100% !important;
+    flex: 0 0 auto !important;
+    min-height: auto;
+    max-height: 45vh;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .hs-main-column {
+    min-height: auto !important;
+  }
+}
+
+/* Keep top header on one row on typical laptop widths (override Django responsive column header) */
+@media (min-width: 769px) {
+  body.hs-admin-shell #header.hs-top-header {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  body.hs-admin-shell #user-tools.hs-user-tools {
+    text-align: right !important;
+    margin: 0 !important;
+  }
+}

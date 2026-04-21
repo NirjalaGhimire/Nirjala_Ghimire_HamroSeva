@@ -2,6 +2,10 @@
 hamro_seva/
 hamro_sewa/
 
+# Node (JWT admin SPA)
+admin-web/node_modules/
+admin-web/dist/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -11,6 +15,14 @@ __pycache__/
 *.so
 db.sqlite3
 backend/media/
+
+# Local helper files (not for repo)
+PUSH_TO_GITHUB_STEPS.md
+create_60_commits.ps1
+
+# Env files with secrets (use .env.example as template)
+.env
+backend/.env
 
 # JVM / crash logs
 *.log

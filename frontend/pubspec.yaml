@@ -24,10 +24,20 @@ dependencies:
   url_launcher: ^6.2.4
   uuid: ^4.3.3
   webview_flutter: ^4.4.2
+  webview_flutter_android: ^4.10.13
+  esewa_flutter_sdk: ^2.0.1
   device_info_plus: ^10.1.0
   share_plus: ^7.2.1
+  pdf: ^3.11.1
+  printing: ^5.13.4
   google_sign_in: ^6.2.1
-  flutter_facebook_auth: ^7.0.2
+  google_maps_flutter: ^2.5.3
+  geolocator: ^13.0.2
+  app_links: ^6.4.0
+  android_intent_plus: ^6.0.0
+  image: ^4.8.0
+  http_parser: ^4.1.2
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -39,3 +49,4 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/.env

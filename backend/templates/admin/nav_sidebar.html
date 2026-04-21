@@ -1,0 +1,15 @@
+{% load i18n %}
+{# Hamro Sewa: sidebar without floating toggle — layout uses fixed premium sidebar #}
+<button type="button" class="sticky toggle-nav-sidebar hs-nav-toggle-hidden" id="toggle-nav-sidebar" aria-hidden="true" tabindex="-1" style="display:none"></button>
+<nav class="sticky hs-nav-sidebar-inner" id="nav-sidebar" aria-label="{% translate 'Sidebar' %}">
+  <a href="{% url 'hamro_admin_dashboard' %}" class="hs-nav-dashboard-link {% if request.path == '/admin/' or request.path == '/admin' or request.path|slice:':16' == '/admin/dashboard' %}is-active{% endif %}">
+    <span class="hs-nav-dashboard-icon" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+    </span>
+    {% translate 'Dashboard' %}
+  </a>
+  <input type="search" id="nav-filter" class="hs-nav-filter"
+         placeholder="{% translate 'Start typing to filter…' %}"
+         aria-label="{% translate 'Filter navigation items' %}">
+  {% include 'admin/app_list.html' with app_list=available_apps show_changelinks=False %}
+</nav>

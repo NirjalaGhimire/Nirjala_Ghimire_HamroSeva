@@ -1,0 +1,309 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static log hamro_admin_tags %}
+
+{% block extrastyle %}{{ block.super }}{% endblock %}
+
+{% block coltype %}colM{% endblock %}
+
+{% block bodyclass %}{{ block.super }} dashboard hs-dashboard-home{% endblock %}
+
+{% block nav-breadcrumbs %}
+<nav class="hs-breadcrumb-wrap" aria-label="{% translate 'Breadcrumbs' %}">
+  <div class="breadcrumbs hs-breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; {% translate 'Dashboard' %}
+  </div>
+</nav>
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+{# Stats must run inside this block — Django ignores template code outside {% block %} in child templates. #}
+{% hamro_admin_stats as stats %}
+<div id="content-main" class="hs-dashboard-root hs-dash-v2">
+  <header class="hs-dash-hero">
+    <div>
+      <h1 class="hs-dash-title">{% translate 'Dashboard analytics' %}</h1>
+      <p class="hs-dash-lead">{% translate 'Marketplace health, bookings, and activity — synced from your database.' %}</p>
+    </div>
+  </header>
+
+  {% if stats.stats_error %}
+  <div class="hs-dash-error" role="alert" style="margin:0 0 1rem;padding:0.75rem 1rem;border-radius:10px;border:1px solid rgba(248,113,113,0.5);background:rgba(127,29,29,0.25);color:#fecaca;font-size:0.875rem;">
+    <strong>{% translate 'Could not load dashboard stats.' %}</strong>
+    {{ stats.stats_error }}
+    <span class="hs-muted" style="display:block;margin-top:0.35rem;opacity:0.9;">{% translate 'Run' %} <code>python manage.py sync_supabase_all</code> {% translate 'and' %} <code>sync_supabase_users</code> {% translate 'if tables are empty.' %}</span>
+  </div>
+  {% endif %}
+
+  <section class="hs-dash-top-grid" aria-label="{% translate 'Overview' %}">
+    <div class="hs-dash-metrics">
+      <div class="hs-mini-metric-grid">
+        <article class="hs-mini-card hs-glow-green">
+          <div class="hs-mini-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </div>
+          <span class="hs-mini-label">{% translate 'Total bookings' %}</span>
+          <strong class="hs-mini-value">{{ stats.bookings }}</strong>
+          <span class="hs-mini-sub">{% translate 'All time (local DB)' %}</span>
+        </article>
+        <article class="hs-mini-card hs-glow-blue">
+          <div class="hs-mini-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+          <span class="hs-mini-label">{% translate 'Users' %}</span>
+          <strong class="hs-mini-value">{{ stats.users }}</strong>
+          <span class="hs-mini-sub">{{ stats.customers }} {% translate 'customers' %} · {{ stats.providers }} {% translate 'providers' %}</span>
+        </article>
+        <article class="hs-mini-card hs-glow-amber">
+          <div class="hs-mini-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <span class="hs-mini-label">{% translate 'Pending requests' %}</span>
+          <strong class="hs-mini-value">{{ stats.pending_bookings }}</strong>
+          <span class="hs-mini-sub">{% translate 'Bookings' %} (pending / quoted / awaiting payment) · {{ stats.pending_verification_requests }} {% translate 'provider verifications pending' %}</span>
+        </article>
+        <article class="hs-mini-card hs-glow-violet">
+          <div class="hs-mini-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <span class="hs-mini-label">{% translate 'Listed services' %}</span>
+          <strong class="hs-mini-value">{{ stats.services }}</strong>
+          <span class="hs-mini-sub">{{ stats.categories }} {% translate 'categories' %}</span>
+        </article>
+      </div>
+
+      <div class="hs-dash-wide-cards">
+        <article class="hs-wide-stat hs-glow-rose">
+          <span class="hs-mini-label">{% translate 'Payments recorded' %}</span>
+          <strong class="hs-wide-value">{{ stats.payments }}</strong>
+          <span class="hs-mini-sub">{% translate 'Completed revenue:' %} {{ stats.total_revenue }}</span>
+        </article>
+        <article class="hs-wide-stat hs-glow-orange">
+          <span class="hs-mini-label">{% translate 'Reviews' %} / {% translate 'Refunds' %}</span>
+          <strong class="hs-wide-value">{{ stats.reviews }} <span class="hs-slash">/</span> {{ stats.refunds }}</strong>
+          <span class="hs-mini-sub">{% translate 'From seva_review and seva_refund' %}</span>
+        </article>
+      </div>
+    </div>
+
+    <aside class="hs-gauge-card" aria-label="{% translate 'Market pulse' %}">
+      <h2 class="hs-gauge-title">{% translate 'Market pulse' %}</h2>
+      <p class="hs-gauge-sub">{% translate 'Derived from bookings, completions, and queue depth.' %}</p>
+      <div class="hs-gauge-labels">
+        <span>{% translate 'Low' %}</span>
+        <span>{% translate 'High' %}</span>
+      </div>
+      <div class="hs-gauge-svg-wrap">
+        <svg class="hs-gauge-svg" viewBox="0 0 200 120" aria-hidden="true">
+          <defs>
+            <linearGradient id="hsGaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#ef4444" />
+              <stop offset="50%" stop-color="#eab308" />
+              <stop offset="100%" stop-color="#22c55e" />
+            </linearGradient>
+          </defs>
+          <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14" stroke-linecap="round" />
+          <path id="hsGaugeArc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#hsGaugeGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2" style="transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1)" />
+        </svg>
+        <div class="hs-gauge-center" id="hsGaugePct">{{ stats.market_pulse }}%</div>
+      </div>
+      <p class="hs-gauge-status" id="hsGaugeMsg"></p>
+    </aside>
+  </section>
+
+  <section class="hs-dash-mid" aria-label="{% translate 'Charts' %}">
+    <div class="hs-chart-card hs-chart-wide">
+      <div class="hs-chart-head">
+        <h2>{% translate 'Bookings & payments trend' %}</h2>
+        <p>{% translate 'Last 90 calendar days (daily): bookings by created date (fallback: scheduled date if created_at is empty); payments by created date (fallback: updated_at).' %}</p>
+      </div>
+      <div class="hs-chart-canvas-wrap hs-chart-tall">
+        <canvas id="hsAdminLineChart"></canvas>
+      </div>
+    </div>
+    <div class="hs-progress-stack">
+      <div class="hs-chart-card">
+        <div class="hs-chart-head">
+          <h2>{% translate 'Pipeline' %}</h2>
+          <p>{% translate 'Share of all bookings' %}</p>
+        </div>
+        <div class="hs-progress-list">
+          <div class="hs-progress-row">
+            <div class="hs-progress-meta"><span>{% translate 'Completed' %}</span><strong>{{ stats.completed_bookings }}</strong></div>
+            <div class="hs-progress-track"><span class="hs-progress-fill hs-pf1" style="width: {% if stats.bookings %}{% widthratio stats.completed_bookings stats.bookings 100 %}{% else %}0{% endif %}%"></span></div>
+          </div>
+          <div class="hs-progress-row">
+            <div class="hs-progress-meta"><span>{% translate 'Confirmed' %}</span><strong>{{ stats.confirmed_bookings }}</strong></div>
+            <div class="hs-progress-track"><span class="hs-progress-fill hs-pf2" style="width: {% if stats.bookings %}{% widthratio stats.confirmed_bookings stats.bookings 100 %}{% else %}0{% endif %}%"></span></div>
+          </div>
+          <div class="hs-progress-row">
+            <div class="hs-progress-meta"><span>{% translate 'Pending' %}</span><strong>{{ stats.pending_bookings }}</strong></div>
+            <div class="hs-progress-track"><span class="hs-progress-fill hs-pf3" style="width: {% if stats.bookings %}{% widthratio stats.pending_bookings stats.bookings 100 %}{% else %}0{% endif %}%"></span></div>
+          </div>
+        </div>
+        <div class="hs-cap-row">
+          <span class="hs-cap-label">{% translate 'Total booking volume' %}</span>
+          <span class="hs-cap-badge">{{ stats.bookings }} {% translate 'bookings' %}</span>
+        </div>
+      </div>
+      <div class="hs-chart-card hs-donut-card">
+        <div class="hs-chart-head">
+          <h2>{% translate 'Mix' %}</h2>
+          <p>{% translate 'Users · bookings · services' %}</p>
+        </div>
+        <div class="hs-chart-canvas-wrap hs-donut-wrap">
+          <canvas id="hsAdminDonutChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hs-dash-bottom" aria-label="{% translate 'Volume and activity' %}">
+    <div class="hs-chart-card">
+      <div class="hs-chart-head">
+        <h2>{% translate 'Volume by module' %}</h2>
+        <p>{% translate 'Counts from admin database' %}</p>
+      </div>
+      <div class="hs-chart-canvas-wrap">
+        <canvas id="hsAdminBarChart"></canvas>
+      </div>
+    </div>
+    <div class="hs-recent-card">
+      <h2>{% translate 'Recent actions' %}</h2>
+      <h3 class="hs-recent-sub">{% translate 'My actions' %}</h3>
+      {% get_admin_log 12 as admin_log for_user user %}
+      {% if not admin_log %}
+        <p class="hs-quiet">{% translate 'None available' %}</p>
+      {% else %}
+        <ul class="hs-action-list">
+        {% for entry in admin_log %}
+          <li class="{% if entry.is_addition %}hs-add{% endif %}{% if entry.is_change %} hs-change{% endif %}{% if entry.is_deletion %} hs-del{% endif %}">
+            {% if entry.is_deletion or not entry.get_admin_url %}
+              {{ entry.object_repr }}
+            {% else %}
+              <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+            {% endif %}
+            <span class="hs-action-meta">{% filter capfirst %}{{ entry.content_type.name }}{% endfilter %}</span>
+          </li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="hs-quick-models" aria-label="{% translate 'Modules' %}">
+    <h2 class="hs-quick-title">{% translate 'All modules' %}</h2>
+    <p class="hs-quick-hint">{% translate 'Jump to any model or use the sidebar.' %}</p>
+    {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+  </section>
+{# Charts must stay inside {% block content %} — Django pops block context after the block ends, so {% block footer %} never sees `stats` from hamro_admin_stats. #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  var pulse = {{ stats.market_pulse|default:0 }};
+  var grid = 'rgba(255,255,255,0.06)';
+  var muted = '#a1a1aa';
+  var lineLabels = {{ stats.trend_labels_json|default:"[]"|safe }};
+  var lineBookings = {{ stats.trend_bookings_json|default:"[]"|safe }};
+  var linePayments = {{ stats.trend_payments_json|default:"[]"|safe }};
+  var bu = {{ stats.users|default:0 }};
+  var bb = {{ stats.bookings|default:0 }};
+  var bp = {{ stats.payments|default:0 }};
+  var bs = {{ stats.services|default:0 }};
+  var br = {{ stats.reviews|default:0 }};
+  var bf = {{ stats.refunds|default:0 }};
+  function ready(fn) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
+  }
+  ready(function() {
+    var arc = document.getElementById('hsGaugeArc');
+    var msg = document.getElementById('hsGaugeMsg');
+    var arcLen = 251.2;
+    if (arc) {
+      requestAnimationFrame(function() {
+        var p = Math.max(0, Math.min(100, pulse));
+        arc.style.strokeDashoffset = String(arcLen * (1 - p / 100));
+      });
+    }
+    if (msg) {
+      if (pulse < 35) msg.textContent = '{% translate "Higher pending share or low completion — review queue." %}';
+      else if (pulse < 65) msg.textContent = '{% translate "Mixed completion and pending volume (heuristic score)." %}';
+      else msg.textContent = '{% translate "Higher completion ratio relative to pending volume." %}';
+    }
+    if (typeof Chart === 'undefined') return;
+    var lineEl = document.getElementById('hsAdminLineChart');
+    if (lineEl) {
+      var lb = Array.isArray(lineBookings) ? lineBookings : [];
+      var lp = Array.isArray(linePayments) ? linePayments : [];
+      var ll = Array.isArray(lineLabels) ? lineLabels : [];
+      if (!ll.length && lb.length) ll = lb.map(function(_, i) { return String(i + 1); });
+      var pr = (lb.length > 45) ? 0 : 2;
+      new Chart(lineEl, {
+        type: 'line',
+        data: {
+          labels: ll,
+          datasets: [
+            { label: '{% translate "Bookings" %}', data: lb, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.12)', fill: true, tension: 0.35, borderWidth: 2, pointRadius: pr },
+            { label: '{% translate "Payments" %}', data: lp, borderColor: '#a16207', backgroundColor: 'rgba(161,98,7,0.14)', fill: true, tension: 0.35, borderWidth: 2, pointRadius: pr }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: muted } } },
+          scales: {
+            x: { grid: { color: grid }, ticks: { color: muted, maxRotation: 50, autoSkip: true, maxTicksLimit: 14 } },
+            y: { grid: { color: grid }, ticks: { color: muted }, beginAtZero: true }
+          }
+        }
+      });
+    }
+    var donutEl = document.getElementById('hsAdminDonutChart');
+    if (donutEl) {
+      var ddata = [bu, bb, bs];
+      new Chart(donutEl, {
+        type: 'doughnut',
+        data: {
+          labels: ['{% translate "Users" %}', '{% translate "Bookings" %}', '{% translate "Services" %}'],
+          datasets: [{ data: ddata, backgroundColor: ['#22c55e','#3b82f6','#a855f7'], borderWidth: 0 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '66%', plugins: { legend: { position: 'bottom', labels: { color: muted, padding: 10, boxWidth: 10 } } } }
+      });
+    }
+    var barEl = document.getElementById('hsAdminBarChart');
+    if (barEl) {
+      var barData = [bu, bb, bp, bs, br, bf];
+      var barColors = ['#22c55e', '#10b981', '#eab308', '#a855f7', '#3b82f6', '#f97316'];
+      new Chart(barEl, {
+        type: 'bar',
+        data: {
+          labels: ['{% translate "Users" %}','{% translate "Bookings" %}','{% translate "Pay" %}','{% translate "Svc" %}','{% translate "Rev" %}','{% translate "Ref" %}'],
+          datasets: [{
+            data: barData,
+            backgroundColor: barColors,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: muted } },
+            y: { grid: { color: grid }, ticks: { color: muted }, beginAtZero: true }
+          }
+        }
+      });
+    }
+  });
+})();
+</script>
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
+
+{% block footer %}
+{{ block.super }}
+{% endblock %}

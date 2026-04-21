@@ -5,6 +5,11 @@ import 'package:uuid/uuid.dart';
 class ESewaService {
   static const String _merchantCode = 'EPAYTEST';
   static const String _apiUrl = 'https://uat.esewa.com.np/epay/main';
+
+  /// Official eSewa SDK test credentials (developer.esewa.com.np).
+  /// For production, use your merchant clientId and secretKey from eSewa.
+  static const String clientId = 'JB0BBQ4aD0UqIThFJwAKBgAXEUkEGQUBBAwdOgABHD4DChwUAB0R';
+  static const String secretKey = 'BhwIWQQADhIYSxILExMcAgFXFhcOBwAKBgAXEQ==';
   
   /// Generate eSewa payment URL
   static String generatePaymentUrl({

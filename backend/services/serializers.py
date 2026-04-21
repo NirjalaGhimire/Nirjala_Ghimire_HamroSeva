@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ServiceCategory, Service, Booking, Review
+from .models import ServiceCategory, Service, Booking, Review, ChatMessage
 from authentication.models import User
 
 class ServiceCategorySerializer(serializers.ModelSerializer):
@@ -33,6 +33,10 @@ class CreateBookingSerializer(serializers.Serializer):
     booking_time = serializers.TimeField()
     notes = serializers.CharField(required=False, allow_blank=True, default='')
     total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    address = serializers.CharField(required=False, allow_blank=True, default='')
+    latitude = serializers.FloatField(required=False, allow_null=True)
+    longitude = serializers.FloatField(required=False, allow_null=True)
+    request_image_url = serializers.CharField(required=False, allow_blank=True, default='')
 
 class ReviewSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.username', read_only=True)
@@ -42,6 +46,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = '__all__'
         read_only_fields = ('customer', 'provider', 'booking')
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    sender_name = serializers.CharField(source='sender.username', read_only=True)
+
+    class Meta:
+        model = ChatMessage
+        fields = '__all__'
+        read_only_fields = ('sender',)
+
 
 class DashboardStatsSerializer(serializers.Serializer):
     total_services = serializers.IntegerField()
@@ -81,3 +95,37 @@ class UserProfileSerializer(serializers.ModelSerializer):
             if reviews.exists():
                 return sum(review.rating for review in reviews) / reviews.count()
         return 0
+
+
+class CustomerProfileSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    user_id = serializers.IntegerField(read_only=True)
+    full_name = serializers.CharField(max_length=200)
+    email = serializers.EmailField(max_length=254)
+    phone = serializers.CharField(max_length=30)
+    location = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    profile_image_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    created_at = serializers.CharField(read_only=True)
+    updated_at = serializers.CharField(read_only=True)
+
+
+class CustomerProfileUpdateSerializer(serializers.Serializer):
+    full_name = serializers.CharField(max_length=200, required=True)
+    email = serializers.EmailField(max_length=254, required=True)
+    phone = serializers.CharField(max_length=30, required=True)
+    location = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    def validate_full_name(self, value):
+        if not (value or '').strip():
+            raise serializers.ValidationError('full_name is required')
+        return value.strip()
+
+    def validate_phone(self, value):
+        if not (value or '').strip():
+            raise serializers.ValidationError('phone is required')
+        return value.strip()
+
+    def validate_email(self, value):
+        if not (value or '').strip():
+            raise serializers.ValidationError('email is required')
+        return value.strip().lower()

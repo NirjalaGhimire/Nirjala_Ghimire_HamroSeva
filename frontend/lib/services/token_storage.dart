@@ -7,6 +7,9 @@ class TokenStorage {
   static const String _userKey = 'user_profile';
   static const String _onboardingSeenKey = 'onboarding_seen';
   static const String _localeKey = 'app_locale';
+  static const String _lastSeenNotificationIdKey = 'last_seen_notification_id';
+  static const String _notificationsEnabledKey = 'notifications_enabled';
+  static const String _biometricEnabledKey = 'biometric_enabled';
   static const String defaultLocale = 'en';
 
   static Future<void> saveTokens({
@@ -52,6 +55,16 @@ class TokenStorage {
     await prefs.remove(_userKey);
   }
 
+  static Future<int?> getLastSeenNotificationId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_lastSeenNotificationIdKey);
+  }
+
+  static Future<void> setLastSeenNotificationId(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_lastSeenNotificationIdKey, id);
+  }
+
   static Future<bool> getOnboardingSeen() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_onboardingSeenKey) ?? false;
@@ -72,5 +85,25 @@ class TokenStorage {
   static Future<void> saveLocale(String localeCode) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_localeKey, localeCode == 'ne' ? 'ne' : 'en');
+  }
+
+  static Future<bool> getNotificationsEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_notificationsEnabledKey) ?? true;
+  }
+
+  static Future<void> setNotificationsEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_notificationsEnabledKey, value);
+  }
+
+  static Future<bool> getBiometricEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_biometricEnabledKey) ?? false;
+  }
+
+  static Future<void> setBiometricEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_biometricEnabledKey, value);
   }
 }

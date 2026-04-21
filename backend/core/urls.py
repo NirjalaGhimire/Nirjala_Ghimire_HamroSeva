@@ -20,6 +20,8 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from core.admin_views import hamro_admin_dashboard
+
 # Hamro Sewa admin branding
 admin.site.site_header = 'Hamro Sewa Administration'
 admin.site.site_title = 'Hamro Sewa Admin'
@@ -31,16 +33,25 @@ def root_view(request):
     return JsonResponse({
         'name': 'Hamro Sewa API',
         'admin': '/admin/',
+        'admin_api': '/api/admin/',
         'auth': '/api/auth/',
+        'ai': '/api/ai/query/',
         'api': '/api/',
     })
 
 
+# Premium analytics dashboard (admin home + /admin/dashboard/)
+admin.site.index_template = 'admin/hamro_dashboard.html'
+
 urlpatterns = [
     path('', root_view),
+    path('admin/dashboard/', admin.site.admin_view(hamro_admin_dashboard), name='hamro_admin_dashboard'),
     path('admin/', admin.site.urls),
     path('api/auth/', include('authentication.urls')),
+    path('api/ai/', include('ai_assistant.urls')),
+    path('api/admin/', include('admin_api.urls')),
     path('api/', include('services.urls')),
 ]
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -10,22 +10,42 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load backend/.env into os.environ if present (no extra dependency)
+_env_file = BASE_DIR / '.env'
+if _env_file.exists():
+    with open(_env_file, encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, _, value = line.partition('=')
+                key, value = key.strip(), value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$dg7pjbylnct)mwgr6=gz!jxt7jd9x)ecp^1_v%@!&w$a@zio3'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-$dg7pjbylnct)mwgr6=gz!jxt7jd9x)ecp^1_v%@!&w$a@zio3')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', '0').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = ['*']
+# Render (and other platforms) provide an external hostname. Keep permissive defaults for local dev,
+# but avoid '*' in production because it breaks Host header protection.
+_allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '')
+if _allowed_hosts_env.strip():
+    ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_env.split(',') if h.strip()]
+else:
+    # Local dev defaults; add your Render hostname via ALLOWED_HOSTS env.
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1','127.0.0.0:8000', '.onrender.com','*']
 
 
 # Application definition
@@ -46,6 +66,8 @@ INSTALLED_APPS = [
     # Local apps
     'authentication',
     'services',
+    'ai_assistant',
+    'admin_api',
 ]
 
 MIDDLEWARE = [
@@ -58,6 +80,17 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# WhiteNoise is used in production to serve static files. Make it optional for local dev
+# so a partially-installed environment can still run `manage.py runserver`.
+try:
+    import whitenoise  # noqa: F401
+except ModuleNotFoundError:
+    whitenoise = None
+else:
+    # Insert right after SecurityMiddleware for best practice.
+    _idx = 1 if MIDDLEWARE and MIDDLEWARE[0] == 'django.middleware.security.SecurityMiddleware' else 0
+    MIDDLEWARE.insert(_idx + 0, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 ROOT_URLCONF = 'core.urls'
 
@@ -85,14 +118,26 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Django default DB below is for Django's own tables (sessions, migrations, admin).
 # Your app data (users, auth) is in Supabase PostgreSQL via supabase_config.py and authentication.models.
 
-import os
+try:
+    import dj_database_url  # type: ignore
+except ModuleNotFoundError:
+    dj_database_url = None
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if dj_database_url is None:
+    # Local/dev fallback when production-only deps aren't installed.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default='sqlite:///db.sqlite3',
+            conn_max_age=600,
+        )
+    }
 
 
 # Password validation
@@ -129,8 +174,21 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# In development, ensure static files are served
+if DEBUG:
+    # Development: Django serves static files automatically
+    pass
+else:
+    # Production: Use WhiteNoise for static files
+    if whitenoise is not None:
+        STORAGES = {
+            "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+            "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+        }
 
 # Media files (uploaded verification documents)
 MEDIA_URL = 'media/'
@@ -177,8 +235,31 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Allow all origins for development (remove in production)
-CORS_ALLOW_ALL_ORIGINS = True
+# Allow all origins for development only.
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+# CSRF: when hosting on Render, set your public URL (scheme+host) in CSRF_TRUSTED_ORIGINS.
+# Example: https://your-service.onrender.com
+_csrf_trusted = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+if _csrf_trusted.strip():
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted.split(',') if o.strip()]
+
+# Google Maps API key (for Places Autocomplete, Geocoding). From env or backend/.env
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
+
+# OpenRouter (OpenAI-compatible API) — Hamro Sewa AI assistant. Set in backend/.env only.
+OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
+OPENROUTER_MODEL = os.environ.get('OPENROUTER_MODEL', 'openai/gpt-4o-mini')
+OPENROUTER_BASE_URL = os.environ.get('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1')
+
+# Email (SMTP) — password reset and other send_mail usage (see docs/GMAIL_SMTP_PASSWORD_RESET.md).
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'true').lower() in ('1', 'true', 'yes')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@localhost')
 
 # Custom User Model
 AUTH_USER_MODEL = 'authentication.User'

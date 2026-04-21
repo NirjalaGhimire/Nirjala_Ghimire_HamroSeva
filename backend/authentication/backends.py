@@ -1,17 +1,18 @@
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 from .models import User
 
 class SupabaseAuthBackend(BaseBackend):
     """
     Custom authentication backend for Supabase users.
-    Passwords are stored in Supabase (plain for dev); we compare after normalizing.
+    Passwords are stored in Supabase as Django hashes (PBKDF2). We verify with check_password.
     """
     
     def authenticate(self, request, username=None, password=None, **kwargs):
         """
         Authenticate user against Supabase data.
-        Uses case-insensitive username/email lookup to match login form behavior.
+        Uses case-insensitive username/email lookup. Verifies password against stored hash.
         """
         UserModel = get_user_model()
         
@@ -35,11 +36,13 @@ class SupabaseAuthBackend(BaseBackend):
                 except UserModel.DoesNotExist:
                     user = UserModel.objects.get_by_username_ignore_case(username)
             
-            # Compare password (stored plain in Supabase for dev; normalize whitespace)
-            stored = getattr(user, 'password', None)
-            if stored is None:
-                stored = ''
-            if (str(stored).strip() == password) or (stored == password):
+            stored = getattr(user, 'password', None) or ''
+            # Prefer Django hash check (pbkdf2_sha256$...); supports existing hashed rows.
+            if check_password(password, stored):
+                return user
+            # Backward compatibility: if stored value does not look like a hash, allow plain comparison
+            # (so existing plain-text users can still log in until they change password or you migrate).
+            if '$' not in str(stored) and (str(stored).strip() == password or stored == password):
                 return user
                     
         except UserModel.DoesNotExist:

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hamro Sewa — Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Main navigation">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-mark">H</div>
+          <div class="sidebar-brand-text">
+            Hamro Sewa
+            <span>Admin</span>
+          </div>
+        </div>
+
+        <nav>
+          <div class="nav-section-label">Menu</div>
+          <a href="#" class="nav-item active" data-nav>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="9" rx="1" />
+              <rect x="14" y="3" width="7" height="5" rx="1" />
+              <rect x="14" y="12" width="7" height="9" rx="1" />
+              <rect x="3" y="16" width="7" height="5" rx="1" />
+            </svg>
+            Dashboard
+          </a>
+          <a href="#" class="nav-item" data-nav>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <path d="M16 10a4 4 0 01-8 0" />
+            </svg>
+            Products
+          </a>
+          <a href="#" class="nav-item" data-nav>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+            Orders
+          </a>
+          <a href="#" class="nav-item" data-nav>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            Reports
+          </a>
+
+          <div class="nav-section-label">Finance</div>
+          <a href="#" class="nav-item" data-nav>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+            </svg>
+            Transactions
+          </a>
+          <a href="#" class="nav-item" data-nav>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+              />
+            </svg>
+            Settings
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <a href="#" class="nav-item" data-nav>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            Help
+          </a>
+        </div>
+      </aside>
+
+      <div class="main-wrap">
+        <header class="topbar">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="search"
+              class="search-input"
+              placeholder="Search orders, providers, customers…"
+              aria-label="Search"
+            />
+          </div>
+          <div class="topbar-actions">
+            <button type="button" class="icon-btn" aria-label="Notifications">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 01-3.46 0" />
+              </svg>
+              <span class="badge">7</span>
+            </button>
+            <div class="user-chip" role="button" tabindex="0">
+              <div class="user-avatar" aria-hidden="true">AD</div>
+              <div class="user-meta">
+                <strong>Admin User</strong>
+                <span>Super Admin</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="dashboard">
+          <h1 class="page-title">Dashboard Analytics</h1>
+          <p class="page-sub">Overview of bookings, revenue, and marketplace health — last 30 days.</p>
+
+          <section class="grid-stats" aria-label="Key metrics">
+            <article class="card stat-card green">
+              <div class="stat-card-header">
+                <div class="stat-icon green" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                  </svg>
+                </div>
+                <span class="stat-pill up">+24.8%</span>
+              </div>
+              <div class="stat-label">Total Orders</div>
+              <div class="stat-value">8,052</div>
+              <canvas class="stat-spark" data-spark="green" height="36" width="200" aria-hidden="true"></canvas>
+            </article>
+
+            <article class="card stat-card red">
+              <div class="stat-card-header">
+                <div class="stat-icon red" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                  </svg>
+                </div>
+                <span class="stat-pill up">+18.2%</span>
+              </div>
+              <div class="stat-label">Total Revenue</div>
+              <div class="stat-value">रु 6.2L</div>
+              <canvas class="stat-spark" data-spark="red" height="36" width="200" aria-hidden="true"></canvas>
+            </article>
+
+            <article class="card stat-card yellow">
+              <div class="stat-card-header">
+                <div class="stat-icon yellow" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                    <path d="M16 3.13a4 4 0 010 7.75" />
+                  </svg>
+                </div>
+                <span class="stat-pill down">−3.1%</span>
+              </div>
+              <div class="stat-label">New Users</div>
+              <div class="stat-value">1,284</div>
+              <canvas class="stat-spark" data-spark="yellow" height="36" width="200" aria-hidden="true"></canvas>
+            </article>
+
+            <article class="card stat-card blue">
+              <div class="stat-card-header">
+                <div class="stat-icon blue" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"
+                    />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
+                  </svg>
+                </div>
+                <span class="stat-pill up">+9.4%</span>
+              </div>
+              <div class="stat-label">Growth</div>
+              <div class="stat-value">31.2%</div>
+              <canvas class="stat-spark" data-spark="blue" height="36" width="200" aria-hidden="true"></canvas>
+            </article>
+          </section>
+
+          <section class="grid-charts-row">
+            <article class="card">
+              <div class="card-title-row">
+                <div>
+                  <h2 class="card-title">Revenue &amp; bookings</h2>
+                  <p class="card-subtitle">Daily trend — visits vs. completed payments</p>
+                </div>
+                <div class="chart-legend">
+                  <span><i style="background: #22c55e"></i> Revenue</span>
+                  <span><i style="background: #3b82f6"></i> Orders</span>
+                </div>
+              </div>
+              <div class="chart-wrap tall">
+                <canvas id="chartLine"></canvas>
+              </div>
+            </article>
+
+            <article class="card gauge-card">
+              <div class="card-title-row" style="width: 100%; justify-content: center">
+                <div style="text-align: center">
+                  <h2 class="card-title">Market sentiment</h2>
+                  <p class="card-subtitle">Fear &amp; Greed–style index for demand</p>
+                </div>
+              </div>
+              <div class="gauge-labels">
+                <span>Low</span>
+                <span>High</span>
+              </div>
+              <div class="gauge-svg-wrap">
+                <svg class="gauge-svg" viewBox="0 0 200 120" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#ef4444" />
+                      <stop offset="50%" stop-color="#eab308" />
+                      <stop offset="100%" stop-color="#22c55e" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M 20 100 A 80 80 0 0 1 180 100"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.08)"
+                    stroke-width="14"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    id="gaugeArc"
+                    d="M 20 100 A 80 80 0 0 1 180 100"
+                    fill="none"
+                    stroke="url(#gaugeGrad)"
+                    stroke-width="14"
+                    stroke-linecap="round"
+                    stroke-dasharray="251.2"
+                    stroke-dashoffset="251.2"
+                    style="transition: stroke-dashoffset 1.4s cubic-bezier(0.22, 1, 0.36, 1)"
+                  />
+                </svg>
+                <div class="gauge-value" id="gaugePct">0%</div>
+              </div>
+              <p class="gauge-status" id="gaugeStatus">Loading index…</p>
+            </article>
+          </section>
+
+          <section class="grid-bottom">
+            <article class="card">
+              <div class="card-title-row">
+                <div>
+                  <h2 class="card-title">Category performance</h2>
+                  <p class="card-subtitle">Bookings by vertical</p>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartBar"></canvas>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-title-row">
+                <div>
+                  <h2 class="card-title">Fulfillment progress</h2>
+                  <p class="card-subtitle">Track pipeline stages this week</p>
+                </div>
+              </div>
+              <div class="chart-wrap short">
+                <canvas id="chartDonut"></canvas>
+              </div>
+              <div class="progress-list">
+                <div class="progress-item">
+                  <label><span>Quoted → Paid</span><strong>72%</strong></label>
+                  <div class="progress-track">
+                    <div class="progress-fill g1" style="width: 72%"></div>
+                  </div>
+                </div>
+                <div class="progress-item">
+                  <label><span>Active jobs</span><strong>58%</strong></label>
+                  <div class="progress-track">
+                    <div class="progress-fill g2" style="width: 58%"></div>
+                  </div>
+                </div>
+                <div class="progress-item">
+                  <label><span>SLA on-time</span><strong>91%</strong></label>
+                  <div class="progress-track">
+                    <div class="progress-fill g3" style="width: 91%"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="mini-metrics">
+                <div class="mini-metric">
+                  <div class="k">Market cap proxy</div>
+                  <div class="v">रु 1.25B</div>
+                </div>
+                <div class="mini-metric">
+                  <div class="k">MoM delta</div>
+                  <div class="v" style="color: var(--accent-green)">+0.2%</div>
+                </div>
+              </div>
+            </article>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
