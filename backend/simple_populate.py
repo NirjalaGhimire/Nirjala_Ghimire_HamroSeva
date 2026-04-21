@@ -7,6 +7,7 @@ import os
 import sys
 from datetime import datetime, date, time
 from supabase_config import get_supabase_client
+from django.contrib.auth.hashers import make_password
 
 def create_sample_providers():
     """Create sample provider users"""
@@ -16,7 +17,8 @@ def create_sample_providers():
         {
             'username': 'provider1',
             'email': 'provider1@example.com',
-            'password': 'provider123',
+            # Store hashed passwords (Django PBKDF2) - never plain text.
+            'password': make_password('provider123'),
             'role': 'provider',
             'profession': 'Electrician & IT Support',
             'phone': '9841000001'
@@ -24,7 +26,7 @@ def create_sample_providers():
         {
             'username': 'provider2',
             'email': 'provider2@example.com',
-            'password': 'provider123',
+            'password': make_password('provider123'),
             'role': 'provider',
             'profession': 'Beautician & Salon Expert',
             'phone': '9841000002'
@@ -32,7 +34,7 @@ def create_sample_providers():
         {
             'username': 'provider3',
             'email': 'provider3@example.com',
-            'password': 'provider123',
+            'password': make_password('provider123'),
             'role': 'provider',
             'profession': 'Mathematics Tutor',
             'phone': '9841000003'
@@ -62,7 +64,7 @@ def create_sample_customers():
         {
             'username': 'customer1',
             'email': 'customer1@example.com',
-            'password': 'customer123',
+            'password': make_password('customer123'),
             'role': 'customer',
             'profession': '',
             'phone': '9842000001'
@@ -70,7 +72,7 @@ def create_sample_customers():
         {
             'username': 'customer2',
             'email': 'customer2@example.com',
-            'password': 'customer123',
+            'password': make_password('customer123'),
             'role': 'customer',
             'profession': '',
             'phone': '9842000002'
