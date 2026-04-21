@@ -1,7 +1,15 @@
+# Core (Hamro Sewa uses SQLite for Django + Supabase HTTP API for app data.)
 Django==5.1.7
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.0
 django-cors-headers==4.4.0
-psycopg2-binary==2.9.9
 python-decouple==3.8
 requests==2.31.0
+# djangorestframework-simplejwt imports pkg_resources; setuptools>=81 may remove it.
+setuptools<81
+
+# Production deployment packages
+gunicorn==23.0.0
+whitenoise==6.6.0
+dj-database-url==2.1.0
+psycopg[binary]==3.2.12
