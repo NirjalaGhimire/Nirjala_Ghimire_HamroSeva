@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/features/auth/screens/login_prototype_screen.dart';
 import 'package:hamro_sewa_frontend/features/customer/screens/customer_bookings_tab_screen.dart';
+import 'package:hamro_sewa_frontend/features/notifications/utils/notification_localizer.dart';
+import 'package:hamro_sewa_frontend/features/orders/screens/booking_detail_screen.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
 import 'package:hamro_sewa_frontend/services/token_storage.dart';
 
@@ -10,10 +14,12 @@ class CustomerNotificationsScreen extends StatefulWidget {
   const CustomerNotificationsScreen({super.key});
 
   @override
-  State<CustomerNotificationsScreen> createState() => _CustomerNotificationsScreenState();
+  State<CustomerNotificationsScreen> createState() =>
+      _CustomerNotificationsScreenState();
 }
 
-class _CustomerNotificationsScreenState extends State<CustomerNotificationsScreen> {
+class _CustomerNotificationsScreenState
+    extends State<CustomerNotificationsScreen> {
   List<Map<String, dynamic>> _items = [];
   bool _loading = true;
   String? _error;
@@ -31,29 +37,16 @@ class _CustomerNotificationsScreenState extends State<CustomerNotificationsScree
     });
     try {
       final list = await ApiService.getCustomerNotifications();
-      final items = (list).map((e) {
-        final m = Map<String, dynamic>.from(e as Map);
-        final createdAt = m['created_at'];
-        String time = 'Recently';
-        if (createdAt != null && createdAt is String) {
-          final dt = DateTime.tryParse(createdAt);
-          if (dt != null) {
-            final diff = DateTime.now().difference(dt);
-            if (diff.inMinutes < 60) {
-              time = '${diff.inMinutes} min ago';
-            } else if (diff.inHours < 24) time = '${diff.inHours} hours ago';
-            else time = '${diff.inDays} days ago';
-          }
-        }
-        m['time'] = time;
-        return m;
-      }).toList();
+      final items =
+          list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       setState(() {
         _items = items;
         _loading = false;
       });
     } catch (e) {
-      if (e is SessionExpiredException || e.toString().contains('token not valid') || e.toString().contains('SESSION_EXPIRED')) {
+      if (e is SessionExpiredException ||
+          e.toString().contains('token not valid') ||
+          e.toString().contains('SESSION_EXPIRED')) {
         await TokenStorage.clearTokens();
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
@@ -65,9 +58,9 @@ class _CustomerNotificationsScreenState extends State<CustomerNotificationsScree
       }
       if (mounted) {
         setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
+          _error = e.toString();
+          _loading = false;
+        });
       }
     }
   }
@@ -77,7 +70,11 @@ class _CustomerNotificationsScreenState extends State<CustomerNotificationsScree
     return Scaffold(
       backgroundColor: AppTheme.white,
       appBar: AppBar(
-        title: const Text('Notifications', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        title: Text(
+          AppStrings.t(context, 'notifications'),
+          style: const TextStyle(
+              color: AppTheme.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: AppTheme.customerPrimary,
         foregroundColor: AppTheme.white,
         actions: [
@@ -88,7 +85,8 @@ class _CustomerNotificationsScreenState extends State<CustomerNotificationsScree
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.customerPrimary))
+          ? const Center(
+              child: AppShimmerLoader(color: AppTheme.customerPrimary))
           : _error != null
               ? Center(
                   child: Padding(
@@ -96,9 +94,13 @@ class _CustomerNotificationsScreenState extends State<CustomerNotificationsScree
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(_error!, textAlign: TextAlign.center, style: TextStyle(color: Colors.red[700])),
+                        Text(_error!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.red[700])),
                         const SizedBox(height: 16),
-                        TextButton(onPressed: _load, child: const Text('Retry')),
+                        TextButton(
+                            onPressed: _load,
+                            child: Text(AppStrings.t(context, 'retry'))),
                       ],
                     ),
                   ),
@@ -110,24 +112,30 @@ class _CustomerNotificationsScreenState extends State<CustomerNotificationsScree
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.notifications_none_outlined, size: 72, color: Colors.grey[400]),
+                            Icon(Icons.notifications_none_outlined,
+                                size: 72, color: Colors.grey[400]),
                             const SizedBox(height: 20),
                             Text(
-                              'No notifications yet',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                              AppStrings.t(context, 'noNotificationsYet'),
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[700]),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'When a provider declines a booking or we send updates, they’ll show up here.',
+                              AppStrings.t(
+                                  context, 'notificationsEmptySubtitle'),
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                              style: TextStyle(
+                                  fontSize: 14, color: Colors.grey[600]),
                             ),
                             const SizedBox(height: 24),
                             TextButton.icon(
                               onPressed: _load,
                               icon: const Icon(Icons.refresh, size: 20),
-                              label: const Text('Refresh'),
+                              label: Text(AppStrings.t(context, 'refresh')),
                             ),
                           ],
                         ),
@@ -138,6 +146,19 @@ class _CustomerNotificationsScreenState extends State<CustomerNotificationsScree
                       itemCount: _items.length,
                       itemBuilder: (context, index) {
                         final n = _items[index];
+                        final title = NotificationLocalizer.localizeTitle(
+                          context,
+                          n['title'] as String?,
+                        );
+                        final body = NotificationLocalizer.localizeBody(
+                          context,
+                          n['body'] as String?,
+                        );
+                        final time = NotificationLocalizer.timeAgo(
+                          context,
+                          n['created_at']?.toString(),
+                        );
+
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
                           elevation: 0,
@@ -148,32 +169,50 @@ class _CustomerNotificationsScreenState extends State<CustomerNotificationsScree
                           child: ListTile(
                             contentPadding: const EdgeInsets.all(16),
                             leading: CircleAvatar(
-                              backgroundColor: AppTheme.customerPrimary.withOpacity(0.15),
-                              child: const Icon(Icons.notifications_active, color: AppTheme.customerPrimary),
+                              backgroundColor:
+                                  AppTheme.customerPrimary.withOpacity(0.15),
+                              child: const Icon(Icons.notifications_active,
+                                  color: AppTheme.customerPrimary),
                             ),
                             title: Text(
-                              (n['title'] as String?) ?? 'Notification',
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                              title,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
                             ),
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
-                                (n['body'] as String?) ?? '',
-                                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                                body,
+                                style: TextStyle(
+                                    fontSize: 13, color: Colors.grey[700]),
                               ),
                             ),
                             trailing: Text(
-                              (n['time'] as String?) ?? '',
-                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                              time,
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey[600]),
                             ),
                             onTap: () {
-                              // Navigate to the page where the notice comes (Bookings for booking-related notifications)
-                              Navigator.of(context).pop();
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const CustomerBookingsTabScreen(),
-                                ),
-                              );
+                              final bookingId = n['booking_id']?.toString();
+                              if (bookingId != null &&
+                                  bookingId != 'null' &&
+                                  bookingId.isNotEmpty) {
+                                Navigator.of(context).pop();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => BookingDetailScreen(
+                                        bookingId: bookingId,
+                                        isProvider: false),
+                                  ),
+                                );
+                              } else {
+                                Navigator.of(context).pop();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const CustomerBookingsTabScreen()),
+                                );
+                              }
                             },
                           ),
                         );

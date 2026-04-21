@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/features/auth/screens/login_prototype_screen.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
@@ -31,16 +33,19 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
     try {
       final list = await ApiService.getMyReviews();
       final raw = List<dynamic>.from(list);
-      final reviews = raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      final reviews =
+          raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       if (mounted) {
         setState(() {
-        _reviews = reviews;
-        _loading = false;
-      });
+          _reviews = reviews;
+          _loading = false;
+        });
       }
     } catch (e) {
       if (mounted) {
-        if (e is SessionExpiredException || e.toString().contains('token not valid') || e.toString().contains('SESSION_EXPIRED')) {
+        if (e is SessionExpiredException ||
+            e.toString().contains('token not valid') ||
+            e.toString().contains('SESSION_EXPIRED')) {
           await TokenStorage.clearTokens();
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const LoginPrototypeScreen()),
@@ -69,7 +74,9 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
     return Scaffold(
       backgroundColor: AppTheme.white,
       appBar: AppBar(
-        title: const Text('My Reviews', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        title: Text(AppStrings.t(context, 'myReviews'),
+            style: const TextStyle(
+                color: AppTheme.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppTheme.customerPrimary,
         foregroundColor: AppTheme.white,
         actions: [
@@ -80,7 +87,8 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.customerPrimary))
+          ? const Center(
+              child: AppShimmerLoader(color: AppTheme.customerPrimary))
           : _error != null
               ? Center(
                   child: Padding(
@@ -88,9 +96,13 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(_error!, textAlign: TextAlign.center, style: TextStyle(color: Colors.red[700])),
+                        Text(_error!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.red[700])),
                         const SizedBox(height: 16),
-                        TextButton(onPressed: _load, child: const Text('Retry')),
+                        TextButton(
+                            onPressed: _load,
+                            child: Text(AppStrings.t(context, 'retry'))),
                       ],
                     ),
                   ),
@@ -100,11 +112,16 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.rate_review_outlined, size: 64, color: Colors.grey[400]),
+                          Icon(Icons.rate_review_outlined,
+                              size: 64, color: Colors.grey[400]),
                           const SizedBox(height: 16),
-                          Text('No reviews yet', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+                          Text(AppStrings.t(context, 'noReviewsYet'),
+                              style: TextStyle(
+                                  fontSize: 18, color: Colors.grey[600])),
                           const SizedBox(height: 8),
-                          Text('Reviews you write will appear here', style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+                          Text(AppStrings.t(context, 'reviewsAppearHere'),
+                              style: TextStyle(
+                                  fontSize: 14, color: Colors.grey[500])),
                         ],
                       ),
                     )
@@ -115,7 +132,8 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                         final r = _reviews[index];
                         final service = (r['service'] ?? '').toString();
                         final provider = (r['provider'] ?? '').toString();
-                        final rating = r['rating'] is int ? r['rating'] as int : 0;
+                        final rating =
+                            r['rating'] is int ? r['rating'] as int : 0;
                         final comment = (r['comment'] ?? '').toString();
                         final date = _formatDate(r['date']?.toString());
                         return Card(
@@ -134,14 +152,20 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        service.isEmpty ? 'Service' : service,
-                                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                                        service.isEmpty
+                                            ? AppStrings.t(context, 'service')
+                                            : service,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16),
                                       ),
                                     ),
                                     Row(
                                       children: List.generate(5, (i) {
                                         return Icon(
-                                          i < rating ? Icons.star : Icons.star_border,
+                                          i < rating
+                                              ? Icons.star
+                                              : Icons.star_border,
                                           size: 18,
                                           color: Colors.amber,
                                         );
@@ -152,11 +176,14 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   '$provider • $date',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.grey[600]),
                                 ),
                                 if (comment.isNotEmpty) ...[
                                   const SizedBox(height: 8),
-                                  Text(comment, style: TextStyle(color: Colors.grey[700])),
+                                  Text(comment,
+                                      style:
+                                          TextStyle(color: Colors.grey[700])),
                                 ],
                               ],
                             ),

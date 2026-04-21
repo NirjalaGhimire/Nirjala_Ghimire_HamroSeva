@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
+import 'package:hamro_sewa_frontend/features/customer/screens/shop_detail_screen.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
 
 /// Filter By: tabs Shop, Service, Date Range, Provider. Uses real data from API.
@@ -7,10 +10,12 @@ class FilterByScreen extends StatefulWidget {
   const FilterByScreen({
     super.key,
     this.initialCategory = 0,
+    this.initialFilters,
     this.onApply,
   });
 
   final int initialCategory;
+  final Map<String, dynamic>? initialFilters;
   final void Function(Map<String, dynamic>? filters)? onApply;
 
   @override
@@ -24,7 +29,27 @@ class _FilterByScreenState extends State<FilterByScreen> {
   DateTimeRange? _dateRange;
   String? _selectedProviderId;
 
-  static const List<String> _categories = ['Shop', 'Service', 'Date Range', 'Provider'];
+  static const List<String> _categories = [
+    'Shop',
+    'Service',
+    'Date Range',
+    'Provider'
+  ];
+
+  String _categoryLabel(BuildContext context, String value) {
+    switch (value) {
+      case 'Shop':
+        return AppStrings.t(context, 'shop');
+      case 'Service':
+        return AppStrings.t(context, 'service');
+      case 'Date Range':
+        return AppStrings.t(context, 'dateRange');
+      case 'Provider':
+        return AppStrings.t(context, 'provider');
+      default:
+        return value;
+    }
+  }
 
   List<Map<String, String>> _shops = [];
   List<Map<String, String>> _services = [];
@@ -35,6 +60,18 @@ class _FilterByScreenState extends State<FilterByScreen> {
   void initState() {
     super.initState();
     _categoryIndex = widget.initialCategory.clamp(0, _categories.length - 1);
+    final initialFilters = widget.initialFilters;
+    _selectedShopId = initialFilters?['shop']?.toString();
+    _selectedServiceId = initialFilters?['service']?.toString();
+    _selectedProviderId = initialFilters?['provider']?.toString();
+    final dateRange = initialFilters?['dateRange'];
+    if (dateRange is Map<String, dynamic>) {
+      final start = DateTime.tryParse((dateRange['start'] ?? '').toString());
+      final end = DateTime.tryParse((dateRange['end'] ?? '').toString());
+      if (start != null && end != null) {
+        _dateRange = DateTimeRange(start: start, end: end);
+      }
+    }
     _loadData();
   }
 
@@ -50,7 +87,7 @@ class _FilterByScreenState extends State<FilterByScreen> {
                 'id': p['id'].toString(),
                 'name': ((p['username'] ?? '') as String).isNotEmpty
                     ? '${p['username']}${(p['profession'] ?? '').toString().trim().isNotEmpty ? ' (${p['profession']})' : ''}'
-                    : 'Provider ${p['id']}',
+                    : '${AppStrings.t(context, 'provider')} ${p['id']}',
               })
           .toList();
       _providers = List.from(_shops);
@@ -75,17 +112,59 @@ class _FilterByScreenState extends State<FilterByScreen> {
     });
   }
 
+  void _openProviderProfile(Map<String, String> provider) {
+    final providerId = int.tryParse(provider['id'] ?? '');
+    if (providerId == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ShopDetailScreen(
+          provider: {
+            'id': providerId,
+            'username': provider['name'] ?? 'Provider',
+            'profession': provider['profession'] ?? '',
+            'verification_status':
+                provider['verification_status'] ?? 'unverified',
+          },
+        ),
+      ),
+    );
+  }
+
   void _apply() {
+    String? _labelFor(List<Map<String, String>> items, String? id) {
+      if (id == null || id.isEmpty) return null;
+      for (final item in items) {
+        if (item['id'] == id) return item['name'];
+      }
+      return null;
+    }
+
     final filters = <String, dynamic>{
       'shop': _selectedShopId,
+      'shopLabel': _labelFor(_shops, _selectedShopId),
       'service': _selectedServiceId,
+      'serviceLabel': _labelFor(_services, _selectedServiceId),
       'dateRange': _dateRange != null
-          ? {'start': _dateRange!.start.toIso8601String(), 'end': _dateRange!.end.toIso8601String()}
+          ? {
+              'start': _dateRange!.start.toIso8601String(),
+              'end': _dateRange!.end.toIso8601String()
+            }
+          : null,
+      'dateRangeLabel': _dateRange != null
+          ? '${_dateRange!.start.toString().split(' ')[0]} - ${_dateRange!.end.toString().split(' ')[0]}'
           : null,
       'provider': _selectedProviderId,
+      'providerLabel': _labelFor(_providers, _selectedProviderId),
     };
-    widget.onApply?.call(filters);
-    Navigator.of(context).pop(filters);
+    final hasSelection = filters.entries.any((entry) {
+      final value = entry.value;
+      if (value == null) return false;
+      if (value is String) return value.trim().isNotEmpty;
+      if (value is Map) return value.isNotEmpty;
+      return true;
+    });
+    widget.onApply?.call(hasSelection ? filters : null);
+    Navigator.of(context).pop(hasSelection ? filters : null);
   }
 
   @override
@@ -97,8 +176,8 @@ class _FilterByScreenState extends State<FilterByScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Filter By',
+        title: Text(
+          AppStrings.t(context, 'filterBy'),
           style: TextStyle(
             color: AppTheme.white,
             fontWeight: FontWeight.bold,
@@ -109,7 +188,9 @@ class _FilterByScreenState extends State<FilterByScreen> {
         actions: [
           TextButton(
             onPressed: _reset,
-            child: const Text('Reset', style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.w600)),
+            child: Text(AppStrings.t(context, 'reset'),
+                style: TextStyle(
+                    color: AppTheme.white, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -125,13 +206,15 @@ class _FilterByScreenState extends State<FilterByScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
-                    label: Text(_categories[i]),
+                    label: Text(_categoryLabel(context, _categories[i])),
                     selected: selected,
                     onSelected: (_) => setState(() => _categoryIndex = i),
                     selectedColor: AppTheme.customerPrimary.withOpacity(0.3),
                     checkmarkColor: AppTheme.customerPrimary,
                     side: BorderSide(
-                      color: selected ? AppTheme.customerPrimary : Colors.grey[300]!,
+                      color: selected
+                          ? AppTheme.customerPrimary
+                          : Colors.grey[300]!,
                       width: selected ? 2 : 1,
                     ),
                   ),
@@ -142,7 +225,9 @@ class _FilterByScreenState extends State<FilterByScreen> {
           const Divider(height: 1),
           Expanded(
             child: _loading && _categoryIndex != 2
-                ? const Center(child: CircularProgressIndicator(color: AppTheme.customerPrimary))
+                ? const Center(
+                    child: AppShimmerLoader(
+                        color: AppTheme.customerPrimary))
                 : _buildCategoryContent(),
           ),
         ],
@@ -157,9 +242,10 @@ class _FilterByScreenState extends State<FilterByScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.customerPrimary,
                 foregroundColor: AppTheme.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Apply'),
+              child: Text(AppStrings.t(context, 'apply')),
             ),
           ),
         ),
@@ -170,13 +256,38 @@ class _FilterByScreenState extends State<FilterByScreen> {
   Widget _buildCategoryContent() {
     switch (_categoryIndex) {
       case 0:
-        return _buildList(_shops, _selectedShopId, (id) => setState(() => _selectedShopId = id), leading: Icons.store);
+        return _buildList(_shops, _selectedShopId,
+            (id) => setState(() => _selectedShopId = id),
+            leading: Icons.store);
       case 1:
-        return _buildList(_services, _selectedServiceId, (id) => setState(() => _selectedServiceId = id), leading: Icons.build_circle_outlined);
+        return _buildList(_services, _selectedServiceId,
+            (id) => setState(() => _selectedServiceId = id),
+            leading: Icons.build_circle_outlined);
       case 2:
         return _buildDateRangePicker();
       case 3:
-        return _buildList(_providers, _selectedProviderId, (id) => setState(() => _selectedProviderId = id), leading: Icons.person_outline);
+        return _buildList(
+          _providers,
+          _selectedProviderId,
+          (id) => setState(() => _selectedProviderId = id),
+          leading: Icons.person_outline,
+          secondaryBuilder: (provider) {
+            return Material(
+              color: AppTheme.customerPrimary.withOpacity(0.15),
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => _openProviderProfile(provider),
+                child: const SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Icon(Icons.person_outline,
+                      color: AppTheme.customerPrimary, size: 22),
+                ),
+              ),
+            );
+          },
+        );
       default:
         return const SizedBox();
     }
@@ -187,13 +298,15 @@ class _FilterByScreenState extends State<FilterByScreen> {
     String? selectedId,
     void Function(String id) onSelect, {
     required IconData leading,
+    Widget Function(Map<String, String> item)? secondaryBuilder,
   }) {
     if (items.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'No options available. Add providers or categories in the app.',
+            AppStrings.t(
+                context, 'noOptionsAvailableAddProvidersOrCategoriesInApp'),
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
@@ -219,11 +332,14 @@ class _FilterByScreenState extends State<FilterByScreen> {
             value: id,
             groupValue: selectedId,
             onChanged: (v) => onSelect(v ?? id),
-            title: Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
-            secondary: CircleAvatar(
-              backgroundColor: AppTheme.customerPrimary.withOpacity(0.15),
-              child: Icon(leading, color: AppTheme.customerPrimary, size: 22),
-            ),
+            title:
+                Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
+            secondary: secondaryBuilder?.call(item) ??
+                CircleAvatar(
+                  backgroundColor: AppTheme.customerPrimary.withOpacity(0.15),
+                  child:
+                      Icon(leading, color: AppTheme.customerPrimary, size: 22),
+                ),
             activeColor: AppTheme.customerPrimary,
           ),
         );
@@ -238,7 +354,7 @@ class _FilterByScreenState extends State<FilterByScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Select date range',
+            AppStrings.t(context, 'selectDateRange'),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -269,7 +385,7 @@ class _FilterByScreenState extends State<FilterByScreen> {
             icon: const Icon(Icons.calendar_today),
             label: Text(
               _dateRange == null
-                  ? 'Pick start and end date'
+                  ? AppStrings.t(context, 'pickStartAndEndDate')
                   : '${_dateRange!.start.toString().split(' ')[0]} – ${_dateRange!.end.toString().split(' ')[0]}',
             ),
             style: OutlinedButton.styleFrom(

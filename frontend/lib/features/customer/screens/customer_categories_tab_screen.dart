@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
+import 'package:hamro_sewa_frontend/core/l10n/app_strings.dart';
 import 'package:hamro_sewa_frontend/core/theme/app_theme.dart';
 import 'package:hamro_sewa_frontend/features/customer/screens/customer_search_screen.dart';
 import 'package:hamro_sewa_frontend/features/customer/screens/filter_by_screen.dart';
+import 'package:hamro_sewa_frontend/features/customer/screens/filtered_results_screen.dart';
 import 'package:hamro_sewa_frontend/features/orders/screens/select_provider_screen.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
 
@@ -11,11 +14,16 @@ class CustomerCategoriesTabScreen extends StatefulWidget {
   const CustomerCategoriesTabScreen({super.key});
 
   @override
-  State<CustomerCategoriesTabScreen> createState() => _CustomerCategoriesTabScreenState();
+  State<CustomerCategoriesTabScreen> createState() =>
+      _CustomerCategoriesTabScreenState();
 }
 
-class _CustomerCategoriesTabScreenState extends State<CustomerCategoriesTabScreen> {
+class _CustomerCategoriesTabScreenState
+    extends State<CustomerCategoriesTabScreen> {
   List<Map<String, dynamic>> _categories = [];
+  Map<String, dynamic>? _filters;
+  String? _selectedCategoryId;
+  String? _selectedCategoryTitle;
   bool _loading = true;
 
   static const List<Map<String, dynamic>> _fallbackCategories = [
@@ -24,7 +32,11 @@ class _CustomerCategoriesTabScreenState extends State<CustomerCategoriesTabScree
     {'id': 'carpenter', 'title': 'Carpente', 'icon': Icons.carpenter},
     {'id': 'cleaning', 'title': 'Cleaning', 'icon': Icons.cleaning_services},
     {'id': 'cooking', 'title': 'Cooking', 'icon': Icons.restaurant},
-    {'id': 'electrician', 'title': 'Electricia', 'icon': Icons.electrical_services},
+    {
+      'id': 'electrician',
+      'title': 'Electricia',
+      'icon': Icons.electrical_services
+    },
     {'id': 'gardener', 'title': 'Gardene', 'icon': Icons.eco},
     {'id': 'laundry', 'title': 'Laundry', 'icon': Icons.local_laundry_service},
     {'id': 'painter', 'title': 'Painter', 'icon': Icons.format_paint},
@@ -34,9 +46,17 @@ class _CustomerCategoriesTabScreenState extends State<CustomerCategoriesTabScree
     {'id': 'plumber', 'title': 'Plumber', 'icon': Icons.plumbing},
     {'id': 'remote', 'title': 'Remote', 'icon': Icons.laptop},
     {'id': 'salon', 'title': 'Salon', 'icon': Icons.face_retouching_natural},
-    {'id': 'sanitization', 'title': 'Sanitizat', 'icon': Icons.medical_services},
+    {
+      'id': 'sanitization',
+      'title': 'Sanitizat',
+      'icon': Icons.medical_services
+    },
     {'id': 'security', 'title': 'Security', 'icon': Icons.security},
-    {'id': 'smart_home', 'title': 'Smart Ho', 'icon': Icons.home_repair_service},
+    {
+      'id': 'smart_home',
+      'title': 'Smart Ho',
+      'icon': Icons.home_repair_service
+    },
     {'id': 'tailor', 'title': 'Tailor', 'icon': Icons.checkroom},
   ];
 
@@ -46,13 +66,16 @@ class _CustomerCategoriesTabScreenState extends State<CustomerCategoriesTabScree
     if (n.contains('clean')) return Icons.cleaning_services;
     if (n.contains('plumb')) return Icons.plumbing;
     if (n.contains('electric')) return Icons.electrical_services;
-    if (n.contains('home') && n.contains('service')) return Icons.home_repair_service;
-    if (n.contains('beauty') || n.contains('wellness') || n.contains('salon')) return Icons.face_retouching_natural;
+    if (n.contains('home') && n.contains('service'))
+      return Icons.home_repair_service;
+    if (n.contains('beauty') || n.contains('wellness') || n.contains('salon'))
+      return Icons.face_retouching_natural;
     if (n.contains('education') || n.contains('tutor')) return Icons.school;
     if (n.contains('tech')) return Icons.laptop;
     if (n.contains('transport')) return Icons.directions_car;
     if (n.contains('health')) return Icons.medical_services;
-    if (n.contains('event') || n.contains('photo') || n.contains('cater')) return Icons.camera_alt;
+    if (n.contains('event') || n.contains('photo') || n.contains('cater'))
+      return Icons.camera_alt;
     return Icons.category;
   }
 
@@ -66,7 +89,11 @@ class _CustomerCategoriesTabScreenState extends State<CustomerCategoriesTabScree
     try {
       final list = await ApiService.getCategories();
       if (list.isEmpty) {
-        if (mounted) setState(() { _categories = List.from(_fallbackCategories); _loading = false; });
+        if (mounted)
+          setState(() {
+            _categories = List.from(_fallbackCategories);
+            _loading = false;
+          });
         return;
       }
       final cats = <Map<String, dynamic>>[];
@@ -79,9 +106,52 @@ class _CustomerCategoriesTabScreenState extends State<CustomerCategoriesTabScree
           'icon': _iconForCategoryName(name),
         });
       }
-      if (mounted) setState(() { _categories = cats; _loading = false; });
+      if (mounted)
+        setState(() {
+          _categories = cats;
+          _loading = false;
+        });
     } catch (_) {
-      if (mounted) setState(() { _categories = List.from(_fallbackCategories); _loading = false; });
+      if (mounted)
+        setState(() {
+          _categories = List.from(_fallbackCategories);
+          _loading = false;
+        });
+    }
+  }
+
+  Future<void> _openFilter() async {
+    final initialFilters = <String, dynamic>{
+      ...?_filters,
+      if (_selectedCategoryId != null && _selectedCategoryId!.isNotEmpty)
+        'service': _selectedCategoryId,
+      if (_selectedCategoryTitle != null && _selectedCategoryTitle!.isNotEmpty)
+        'serviceLabel': _selectedCategoryTitle,
+    };
+    final hasSeed = initialFilters.isNotEmpty;
+    final result = await Navigator.of(context).push<Map<String, dynamic>?>(
+      MaterialPageRoute(
+        builder: (_) => FilterByScreen(
+          initialCategory:
+              (_selectedCategoryId != null && _selectedCategoryId!.isNotEmpty)
+                  ? 1
+                  : 0,
+          initialFilters: hasSeed ? initialFilters : _filters,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    setState(() {
+      _filters = result == null || result.isEmpty ? null : result;
+    });
+    if (result != null && result.isNotEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => FilteredResultsScreen(
+            initialFilters: result,
+          ),
+        ),
+      );
     }
   }
 
@@ -90,8 +160,8 @@ class _CustomerCategoriesTabScreenState extends State<CustomerCategoriesTabScree
     return Scaffold(
       backgroundColor: AppTheme.white,
       appBar: AppBar(
-        title: const Text(
-          'Categories',
+        title: Text(
+          AppStrings.t(context, 'categoriesTab'),
           style: TextStyle(
             color: AppTheme.white,
             fontWeight: FontWeight.bold,
@@ -103,19 +173,19 @@ class _CustomerCategoriesTabScreenState extends State<CustomerCategoriesTabScree
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CustomerSearchScreen(hint: 'Search for categories...')),
+              MaterialPageRoute(
+                  builder: (_) => CustomerSearchScreen(
+                      hint: AppStrings.t(context, 'searchForCategories'))),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.tune),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const FilterByScreen()),
-            ),
+            onPressed: _openFilter,
           ),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppPageShimmer()
           : Padding(
               padding: const EdgeInsets.all(16),
               child: GridView.builder(
@@ -135,6 +205,10 @@ class _CustomerCategoriesTabScreenState extends State<CustomerCategoriesTabScree
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () {
+                        setState(() {
+                          _selectedCategoryId = id;
+                          _selectedCategoryTitle = title;
+                        });
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => SelectProviderScreen(
@@ -154,12 +228,16 @@ class _CustomerCategoriesTabScreenState extends State<CustomerCategoriesTabScree
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(icon, size: 36, color: AppTheme.customerPrimary),
+                            Icon(icon,
+                                size: 36, color: AppTheme.customerPrimary),
                             const SizedBox(height: 8),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
                               child: Text(
-                                title.length > 10 ? '${title.substring(0, 10)}…' : title,
+                                title.length > 10
+                                    ? '${title.substring(0, 10)}…'
+                                    : title,
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
