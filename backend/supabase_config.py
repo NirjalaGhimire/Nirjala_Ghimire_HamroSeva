@@ -1,12 +1,24 @@
 import os
-from supabase import create_client, Client
+
+import httpx
+from supabase import Client, create_client
+from supabase.lib import client_options
 
 # Supabase configuration from your dashboard
 SUPABASE_URL = "https://srpvqzkkellawfolftnz.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNycHZxemtrZWxsYXdmb2xmdG56Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDA5OTE0NCwiZXhwIjoyMDg1Njc1MTQ0fQ.c48EeT8SWxpvfeNJeD_FXDHsDC3z0Ngye8zMRy--Ljg"
 
+# Configure a custom httpx client.
+# - Disable HTTP/2 because some Windows environments can raise WinError 10035 on http2 reads.
+# - Use a longer timeout to avoid racing with non-blocking socket behavior.
+_httpx_client = httpx.Client(http2=False, timeout=httpx.Timeout(30.0))
+
 # Initialize Supabase client
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase: Client = create_client(
+    SUPABASE_URL,
+    SUPABASE_KEY,
+    client_options.SyncClientOptions(httpx_client=_httpx_client),
+)
 
 def get_supabase_client() -> Client:
     return supabase
