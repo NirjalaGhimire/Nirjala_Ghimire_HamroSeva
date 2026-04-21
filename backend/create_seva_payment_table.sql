@@ -6,12 +6,17 @@ CREATE TABLE IF NOT EXISTS seva_payment (
     amount DECIMAL(10,2) NOT NULL,
     transaction_id VARCHAR(100) NOT NULL UNIQUE,
     gateway VARCHAR(50) DEFAULT 'esewa',
-    status VARCHAR(20) DEFAULT 'pending',
+    status VARCHAR(30) DEFAULT 'pending',
     ref_id VARCHAR(100),
+    refund_amount DECIMAL(10,2),
+    refund_reason TEXT,
+    refund_reference VARCHAR(100),
     raw_response TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_payment_status CHECK (status IN ('pending', 'completed', 'failed'))
+    CONSTRAINT chk_payment_status CHECK (
+        status IN ('pending', 'completed', 'failed', 'refund_pending', 'refunded', 'refund_rejected')
+    )
 );
 
 CREATE INDEX IF NOT EXISTS idx_seva_payment_booking_id ON seva_payment(booking_id);
