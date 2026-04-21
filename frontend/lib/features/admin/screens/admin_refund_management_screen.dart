@@ -23,10 +23,11 @@ class _AdminRefundManagementScreenState
 
   static const _statusFilters = [
     'all',
-    'pending_provider',
-    'pending_admin',
+    'refund_pending',
+    'refund_provider_approved',
+    'refund_under_review',
     'refunded',
-    'rejected'
+    'refund_rejected'
   ];
 
   @override
@@ -60,27 +61,31 @@ class _AdminRefundManagementScreenState
 
     return _refunds.where((r) {
       final status = r['status']?.toString().toLowerCase() ?? '';
-      return status.contains(_statusFilter);
+      return status == _statusFilter;
     }).toList();
   }
 
   String _getStatusLabel(String? status) {
     final s = status?.toLowerCase() ?? '';
-    if (s.contains('pending_provider')) return 'Pending Provider';
-    if (s.contains('provider_approved')) return 'Provider Approved';
-    if (s.contains('provider_rejected')) return 'Provider Rejected';
-    if (s.contains('refunded')) return 'Refunded';
-    if (s.contains('rejected')) return 'Rejected';
+    if (s == 'refund_pending') return 'Pending Provider Review';
+    if (s == 'refund_provider_approved') return 'Under Admin Review';
+    if (s == 'refund_under_review') return 'Under Admin Review';
+    if (s == 'refund_provider_rejected') return 'Rejected by Provider';
+    if (s == 'refunded') return 'Refunded';
+    if (s == 'refund_rejected') return 'Rejected by Admin';
     return status ?? 'Unknown';
   }
 
   Color _getStatusColor(String? status) {
     final s = status?.toLowerCase() ?? '';
-    if (s.contains('pending_provider')) return Colors.orange;
-    if (s.contains('provider_approved')) return Colors.blue;
-    if (s.contains('provider_rejected')) return Colors.red;
-    if (s.contains('refunded')) return Colors.green;
-    if (s.contains('rejected')) return Colors.red;
+    if (s == 'refund_pending') return Colors.orange;
+    if (s == 'refund_provider_approved' || s == 'refund_under_review') {
+      return Colors.blue;
+    }
+    if (s == 'refund_provider_rejected' || s == 'refund_rejected') {
+      return Colors.red;
+    }
+    if (s == 'refunded') return Colors.green;
     return Colors.grey;
   }
 
