@@ -1,0 +1,30 @@
+-- -----------------------------------------------------------------------------
+-- OPTIONAL: Manual deduplication reference (prefer: python manage.py dedupe_seva_services)
+-- Run in Supabase SQL only after backup. Normalized title =
+--   lower(trim(regexp_replace(title, '\s+', ' ', 'g')))
+-- -----------------------------------------------------------------------------
+--
+-- Near-duplicates with different meanings (e.g. "Electrician" vs "Electrical Repair")
+-- are NOT merged by normalization — only true duplicates (spacing/case).
+--
+-- Example: repoint bookings then delete extras (adjust schema if needed):
+--
+-- WITH g AS (
+--   SELECT category_id,
+--          lower(trim(regexp_replace(title, '\s+', ' ', 'g'))) AS nkey,
+--          min(id) AS keep_id,
+--          array_agg(id ORDER BY id) AS ids
+--   FROM seva_service
+--   GROUP BY 1, 2
+--   HAVING count(*) > 1
+-- )
+-- UPDATE seva_booking b
+-- SET service_id = g.keep_id
+-- FROM g
+-- JOIN LATERAL unnest(g.ids) AS u(old_id) ON b.service_id = u.old_id AND u.old_id <> g.keep_id;
+--
+-- DELETE FROM seva_service s
+-- USING g
+-- WHERE s.id = ANY(g.ids) AND s.id <> g.keep_id;
+-- -----------------------------------------------------------------------------
+SELECT 1; -- no-op placeholder; use management command instead
