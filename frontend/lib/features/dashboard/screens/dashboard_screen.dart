@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hamro_sewa_frontend/core/widgets/app_shimmer_loader.dart';
 import 'package:hamro_sewa_frontend/services/api_service.dart';
 import 'package:hamro_sewa_frontend/services/token_storage.dart';
 import 'package:hamro_sewa_frontend/features/auth/screens/login_prototype_screen.dart';
@@ -31,30 +32,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadDashboardData() async {
     try {
       final savedUser = await TokenStorage.getSavedUser();
-      Map<String, dynamic>? profile;
-      Map<String, dynamic>? stats;
-      List<dynamic> servicesList = [];
-      List<dynamic> bookingsList = [];
-      try {
-        profile = await ApiService.getUserProfile();
-        await TokenStorage.saveUser(profile);
-      } catch (e) {
-        if (e is SessionExpiredException) rethrow;
-        profile = savedUser;
-      }
-      try {
-        stats = await ApiService.getDashboardStats();
-      } catch (e) {
-        if (e is SessionExpiredException) rethrow;
-      }
-      try {
-        servicesList = await ApiService.getServices();
-      } catch (_) {}
-      try {
-        bookingsList = await ApiService.getUserBookings();
-      } catch (e) {
-        if (e is SessionExpiredException) rethrow;
-      }
+      final profileFuture = () async {
+        try {
+          final profile = await ApiService.getUserProfile();
+          await TokenStorage.saveUser(profile);
+          return profile;
+        } catch (e) {
+          if (e is SessionExpiredException) rethrow;
+          return savedUser;
+        }
+      }();
+
+      final statsFuture = () async {
+        try {
+          return await ApiService.getDashboardStats();
+        } catch (e) {
+          if (e is SessionExpiredException) rethrow;
+          return null;
+        }
+      }();
+
+      final servicesFuture = () async {
+        try {
+          return await ApiService.getServices();
+        } catch (_) {
+          return <dynamic>[];
+        }
+      }();
+
+      final bookingsFuture = () async {
+        try {
+          return await ApiService.getUserBookings();
+        } catch (e) {
+          if (e is SessionExpiredException) rethrow;
+          return <dynamic>[];
+        }
+      }();
+
+      final results = await Future.wait<dynamic>([
+        profileFuture,
+        statsFuture,
+        servicesFuture,
+        bookingsFuture,
+      ]);
+
+      Map<String, dynamic>? profile = results[0] as Map<String, dynamic>?;
+      final stats = results[1] as Map<String, dynamic>?;
+      final servicesList = List<dynamic>.from(results[2] as List<dynamic>);
+      final bookingsList = List<dynamic>.from(results[3] as List<dynamic>);
+
       if (profile == null && savedUser != null) profile = savedUser;
 
       if (mounted) {
@@ -72,7 +98,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
       }
     } catch (e) {
-      if (e is SessionExpiredException || e.toString().contains('token not valid') || e.toString().contains('SESSION_EXPIRED')) {
+      if (e is SessionExpiredException ||
+          e.toString().contains('token not valid') ||
+          e.toString().contains('SESSION_EXPIRED')) {
         await TokenStorage.clearTokens();
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
@@ -113,7 +141,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (isLoading) {
       return const Scaffold(
         backgroundColor: _lightLavender,
-        body: Center(child: CircularProgressIndicator()),
+        body: const AppPageShimmer(),
       );
     }
 
@@ -425,7 +453,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.w600, color: _darkGrey),
             ),
             subtitle: Text(
-              'Provider: ${service['provider_name']}\nPrice: Rs. ${service['price']}',
+              'Provider: ${service['provider_name']}',
               style: TextStyle(color: _darkGrey.withOpacity(0.8)),
             ),
             trailing:
